@@ -1,0 +1,31 @@
+{
+  "name": "stock-charts",
+  "version": "1.0.0",
+  "description": "Interactive Stock Charting Module.",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf -rf ./build",
+    "lint": "eslint --ext .js,.jsx src --fix",
+    "watch": "npm run clean && node scripts/watch.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nani3105/stock-charts.git"
+  },
+  "author": "Kurra Niranjan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nani3105/stock-charts/issues"
+  },
+  "homepage": "https://github.com/nani3105/stock-charts",
+  "devDependencies": {
+    "babel": "^6.3.13",
+    "babel-core": "^6.3.15",
+    "eslint": "^1.10.3",
+    "json-loader": "^0.5.4",
+    "rimraf": "^2.4.4",
+    "serve-static": "^1.10.0",
+    "webpack": "^1.12.9",
+    "webpack-dev-server": "^1.14.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+	"ecmaFeatures": {
+		"arrowFunctions": true,
+		"blockBindings": true,
+		"classes": true,
+		"destructuring": true,
+		"forOf": true,
+		"jsx": true,
+		"modules": true,
+		"objectLiteralComputedProperties": true,
+		"objectLiteralShorthandMethods": true,
+		"objectLiteralShorthandProperties": true,
+		"templateStrings": true,
+	},
+	"env": {
+		"browser": true,
+		"node": true
+	},
+	"rules": {
+		"curly": [2, "multi-line"],
+		"semi": [2, "always"],
+		"comma-dangle": [0, "always-multiline"],
+		"strict": [0, "global"],
+		"space-before-function-paren": [2, "never"],
+		"space-after-keywords": [2, "always"],
+		"space-before-blocks": 2,
+		"spaced-comment": [2, "always", { exceptions: ["-"]}],
+	}
+}
