@@ -10,7 +10,7 @@ var serveStatic = require("serve-static")
 var server = new WebpackDevServer(watchCompiler, {
 	publicPath: watchConfig.output.publicPath,
 	// hot: true,
-	/*contentBase: watchConfig.devServer.contentBase,*/
+	contentBase: watchConfig.devServer.contentBase,
 	quiet: false,
 	noInfo: false,
 	stats: {
@@ -18,9 +18,9 @@ var server = new WebpackDevServer(watchCompiler, {
 	}
 });
 
-server.listen(8090, "localhost", function(err) {
+server.listen(watchConfig.devServer.port, "localhost", function(err) {
 	if (err) throw new Error("webpack-dev-server", err);
-	console.log("[webpack-dev-server]", "http://localhost:" + 8090 + "/index.html");
+	console.log("[webpack-dev-server]", "http://localhost:" + watchConfig.devServer.port + "/index.html");
 });
 
 server.app.use(serveStatic("build"));

@@ -9,7 +9,7 @@ module.exports = {
 	output: {
 		path: path.join(__dirname, "build/dist/"), // Path of the output
 		filename: "stock-charts.js", // filename
-		publicPath: "/dist/", //CDN
+		publicPath: "dist/", //CDN
 		library: "ReStock", // Export as library
 		libraryTarget: "umd", // AMD export.
 	},

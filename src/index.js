@@ -1,6 +1,13 @@
 'use strict';
 
-import React from 'react';
-import CanvasContainer from './lib/CanvasContainer'
+// common Components
+import ChartCanvas from "./lib/ChartCanvas";
+import Utils from "./lib/utils/utils";
 
-React.render(<CanvasContainer width={400} height={400} type/>, document.getElementById("chart"));
+const version = "0.0.1";
+
+export default {
+	ChartCanvas,
+	version,
+	Utils
+};
