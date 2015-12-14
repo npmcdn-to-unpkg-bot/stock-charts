@@ -45,6 +45,24 @@ var ChartDataUtil = {
 	getChartConfigFor(innerDimension, chartProps, partialData, fullData, passThroughProps) {
 		var { padding, margin } = chartProps;
 		var dimensions = this.getDimensions(innerDimension, chartProps);
+
+		var xAccessor = this.getXAccessor(chartProps, passThroughProps);
+	},
+	getXAccessor(props, passThroughProps) {
+		var xAccessor = passThroughProps !== undefined && passThroughProps.xAccessor
+			|| props.xAccessor !== undefined&& props.xAccessor;
+		return xAccessor;
+	},
+	identifyOverlaysToAdd(chartProps) {
+		var overlaysToAdd = [];
+		React.Children.forEach(chartProps.children, (child) => {
+			var { yAccessor } = child.props;
+			var indicatorProp = child.props.indicator;
+			if (yAccessor === undefined && indicatorProp === undefined) {
+				console.error(`Either have yAccessor or indicator which provides a yAccessor for Chart ${ chartProps.id } DataSeries ${ child.props.id }`);
+			}
+			var indicator = indicatorProp !== undefined ? indicatorProp()
+		});
 	},
 };
 
