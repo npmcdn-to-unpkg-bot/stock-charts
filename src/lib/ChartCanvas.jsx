@@ -6,6 +6,7 @@ import objectAssign from "object-assign";
 import EventHandler from "./EventHandler";
 import CanvasContainer from "./CanvasContainer";
 
+
 class ChartCanvas extends React.Component {
 	constructor() {
 		super();
@@ -90,7 +91,7 @@ ChartCanvas.defaultProps = {
 	margin: {top: 20, right: 30, bottom: 30, left: 80},
 	interval: "D",
 	type: "hybrid",
-	// defaultDataTransform: [ { transform: DummyTransformer } ],
+	/*defaultDataTransform: [ { transform: DummyTransformer } ],*/
 	dataTransform: [ ],
 	className: "react-stockchart",
 	zIndex: 1,

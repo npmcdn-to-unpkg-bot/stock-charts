@@ -3,14 +3,14 @@
 import React from "react";
 import PureComponent from "./utils/PureComponent";
 import ChartDataUtil from "./utils/ChartDataUtil";
-import { DummyTransformer } from "./transforms";
+import DummyTransformer from "./transforms";
 
 class EventHandler extends PureComponent {
 	getTransformedData(rawData, defaultDataTransform, dataTransform, interval) {
 		var i = 0, eachTransform, options = {}, data = rawData;
 		var transforms = defaultDataTransform.concat(dataTransform);
 		for (i = 0; i < transforms.length; i++) {
-			// console.log(transforms[i]);
+			console.log(transforms[i]);
 			eachTransform = transforms[i].transform();
 			options = objectAssign({}, options, transforms[i].options);
 			options = eachTransform.options(options);
@@ -88,5 +88,9 @@ class EventHandler extends PureComponent {
 		);
 	}
 }
+
+EventHandler.defaultProps = {
+	defaultDataTransform: [ { transform: DummyTransformer } ],
+};
 
 export default EventHandler;

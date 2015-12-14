@@ -61,7 +61,7 @@ var ChartDataUtil = {
 			if (yAccessor === undefined && indicatorProp === undefined) {
 				console.error(`Either have yAccessor or indicator which provides a yAccessor for Chart ${ chartProps.id } DataSeries ${ child.props.id }`);
 			}
-			var indicator = indicatorProp !== undefined ? indicatorProp()
+
 		});
 	},
 };
