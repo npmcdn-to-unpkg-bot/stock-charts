@@ -1,6 +1,6 @@
 "use strict";
 
-function DummyTransformer() {
+export function DummyTransformer() {
 	function transform(data, interval) {
 		var responseData = {};
 		responseData[interval] = data;
@@ -14,4 +14,4 @@ function DummyTransformer() {
 	return transform;
 }
 
-export DummyTransformer;
+

@@ -2,6 +2,9 @@
 
 import React from "react";
 import d3 from "d3";
+import Utils from "./utils"
+
+var { pluck } = Utils;
 
 var ChartDataUtil = {
 	getCharts(props) {
@@ -13,6 +16,14 @@ var ChartDataUtil = {
 		return charts.map( (each) => {
 			var chartProps = each.props;
 			var config = this.getChartConfigFor(innerDimensions, chartProps, partialData, fullData, other);
+
+			var plot = this.getChartPlotFor(config, partialData, domainL, domainR);
+
+			return {
+				id: each.props.id,
+				config: config,
+				plot: plot,
+			};
 		});
 	},
 	getChildren(children, regex) {
@@ -47,22 +58,84 @@ var ChartDataUtil = {
 		var dimensions = this.getDimensions(innerDimension, chartProps);
 
 		var xAccessor = this.getXAccessor(chartProps, passThroughProps);
+		var overlaysToAdd = this.identifyOverlaysToAdd(chartProps);
+		var compareBase = this.identifyCompareBase(chartProps);
+		var compareSeries = this.identifyCompareSeries(chartProps);
+
+		//Calculate overlays TODO
+
+		var origin = typeof chartProps.origin === "function"
+			? chartProps.origin(dimensions.availableWidth, dimensions.availableHeight)
+			: chartProps.origin;
+
+		var scales = this.defineScales(chartProps, partialData, passThroughProps);
+
+		//TODO: IndicatorWithTicks
+
+		var config = {
+			width: dimensions.width,
+			height: dimensions.height,
+			mouseCoordinates: {
+				at: chartProps.yMousePointerDisplayLocation,
+				format: chartProps.yMousePointerDisplayFormat
+			},
+			// indicator: indicator,
+			// indicatorOptions: indicator && indicator.options(),
+			// domain: indicator && indicator.domain && indicator.domain(),
+			origin: origin,
+			padding: padding,
+			xAccessor: xAccessor,
+			overlays: overlaysToAdd,
+			compareBase: compareBase,
+			compareSeries: compareSeries,
+			scaleType: scales,
+			// yTicks: yTicks,
+		};
+		return config;
 	},
 	getXAccessor(props, passThroughProps) {
 		var xAccessor = passThroughProps !== undefined && passThroughProps.xAccessor
-			|| props.xAccessor !== undefined&& props.xAccessor;
+			|| props.xAccessor !== undefined && props.xAccessor;
 		return xAccessor;
 	},
 	identifyOverlaysToAdd(chartProps) {
 		var overlaysToAdd = [];
-		React.Children.forEach(chartProps.children, (child) => {
-			var { yAccessor } = child.props;
-			var indicatorProp = child.props.indicator;
-			if (yAccessor === undefined && indicatorProp === undefined) {
-				console.error(`Either have yAccessor or indicator which provides a yAccessor for Chart ${ chartProps.id } DataSeries ${ child.props.id }`);
+		return overlaysToAdd;
+	},
+	identifyCompareBase(props) {
+		var compareBase;
+		React.Children.forEach(props.children, (child) => {
+			if(React.isValidElement(child) && /DataSeries$/.test(child.props.namespace)) {
+				compareBase = child.props.compareBase;
 			}
-
 		});
+		return compareBase;
+	},
+	identifyCompareSeries(props) {
+		var overlaysToAdd = [];
+		return overlaysToAdd;
+	},
+	defineScales(props, data, passThroughProps) {
+		var xScale = props.xScale,
+			yScale = props.yScale;
+
+		if (xScale === undefined && passThroughProps) xScale = passThroughProps.xScale;
+
+		if (xScale === undefined) {
+			var each = data[0];
+			if (typeof each === "object") {
+				Object.keys(each).forEach( (key) => {
+					if (Object.prototype.toString.call(each[key]) === "[object Date]") {
+						xScale = d3.time.scale();
+					}
+				});
+			}
+			if(xScale === undefined) xScale = d3.scale.linear();
+		}
+		if (yScale === undefined) {
+			yScale = d3.scale.linear();
+		}
+		return { xScale: xScale, yScale: yScale };
 	},
 };
 

@@ -1,5 +1,3 @@
-import DummyTransformer from "./DummyTransformer";
+import { DummyTransformer } from "./DummyTransformer";
 
-export default {
-	DummyTransformer,
-};
+export default DummyTransformer;
