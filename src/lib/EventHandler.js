@@ -8,6 +8,15 @@ import DummyTransformer from "./transforms";
 import objectAssign from "object-assign";
 
 class EventHandler extends PureComponent {
+	constructor(props, context) {
+		super(props, context);
+		// Event Handler.
+
+		this.state = {
+
+		};
+
+	}
 	getTransformedData(rawData, defaultDataTransform, dataTransform, interval) {
 		var i = 0, eachTransform, options = {}, data = rawData;
 		var transforms = defaultDataTransform.concat(dataTransform);
@@ -24,6 +33,7 @@ class EventHandler extends PureComponent {
 		};
 	}
 	componentWillMount() {
+		console.log("In componentWillMount");
 		var { props, context } = this;
 		var { initialDisplay, rawData, defaultDataTransform, dataTransform, interval, dimensions } = props;
 
@@ -37,6 +47,23 @@ class EventHandler extends PureComponent {
 		var beginIndex = Math.max(dataForInterval.length - initialDisplay, 0);
 		var plotData = dataForInterval.slice(beginIndex); // Main Data After the beginIndex.
 		var chartData = ChartDataUtil.getChartData(props, dimensions, plotData, data, options);
+
+		var chart = chartData.filter((eachChart) => eachChart.id ===mainChart)[0];
+
+		this.setState({
+			data: data,
+			rawData: rawData,
+			options: options,
+			plotData: plotData,
+			chartData: chartData,
+			interval: this.props.interval,
+			mainChart: mainChart,
+			currentCharts: [],
+			initialRenderer: true,
+		});
+	}
+	componentWillReceiveProps(nextProps) {
+		console.log("In componentWillReceiveProps");
 	}
 	getChildContext() {
 		return {

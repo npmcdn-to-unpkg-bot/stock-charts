@@ -4,11 +4,20 @@ import React from "react";
 import d3 from "d3";
 import Utils from "./utils"
 
-var { pluck } = Utils;
+var { pluck, keysAsArray } = Utils;
 
 var ChartDataUtil = {
+	containsChart(props) {
+		return this.getCharts(props).length > 0;
+	},
 	getCharts(props) {
 		return this.getChildren(props.children, /Chart$/);
+	},
+	getChartOrigin(origin, contextWidth, contextHeight) {
+		var originCoordinates = typeof origin === "function"
+			? origin(contextWidth, contextHeight)
+			: origin;
+		return originCoordinates;
 	},
 	getChartData(props, innerDimensions, partialData, fullData, other, domainL, domainR) {
 		var charts = this.getCharts(props);
@@ -93,6 +102,11 @@ var ChartDataUtil = {
 		};
 		return config;
 	},
+	getChartPlotFor(config, partialData, domainL, domainR) {
+		var yaccessors = pluck(keysAsArray(config.overlays), "yAccessor");
+
+		if (config.compareSeries.length > 0) {};
+	},
 	getXAccessor(props, passThroughProps) {
 		var xAccessor = passThroughProps !== undefined && passThroughProps.xAccessor
 			|| props.xAccessor !== undefined && props.xAccessor;
@@ -100,6 +114,29 @@ var ChartDataUtil = {
 	},
 	identifyOverlaysToAdd(chartProps) {
 		var overlaysToAdd = [];
+		React.Children.forEach(chartProps.children, (child) => {
+			if (React.isValidElement(child) && /DataSeries$/.test(child.props.namespace)) {
+				var { yAccessor } = child.props;
+				var indicatorProp = child.props.indicator;
+				if(yAccessor === undefined && indicatorProp === undefined) {
+					console.error(`Either have yAccessor or indicator which provides a yAccessor for Chart ${ chartProps.id } DataSeries ${ child.props.id }`);
+				}
+				var indicator = indicatorProp !== undefined ? indicatorProp() : undefined; //TODO: Revisit.
+				var { stroke, fill } = child.props;
+				if (stroke === undefined && indicator !== undefined && indicator.stroke !== undefined) stroke = indicator.stroke();
+				if (fill === undefined && indicator !== undefined && indicator.fill !== undefined) fill = indicator.fill();
+				var overlay = {
+					id: child.props.id,
+					chartId: chartProps.id,
+					yAccessor: yAccessor || indicator.yAccessor(),
+					indicator: indicator,
+					stroke: stroke,
+					fill: fill,
+					// stroke: indicator.options().stroke || overlayColors(child.props.id)
+				};
+				overlaysToAdd.push(overlay);
+			}
+		});
 		return overlaysToAdd;
 	},
 	identifyCompareBase(props) {
@@ -113,6 +150,22 @@ var ChartDataUtil = {
 	},
 	identifyCompareSeries(props) {
 		var overlaysToAdd = [];
+		React.Children.forEach(props.children, (child) => {
+			if (React.isValidElement(child) && /DataSeries$/.test(child.props.namespace)) {
+				React.Children.forEach(child.props.children, (grandChild) => {
+					if (React.isValidElement(grandChild) && /compareSeries$/.test(grandChild.props.namespace)) {
+						overlaysToAdd.push({
+							yAccessor: grandChild.props.yAccessor,
+							id: grandChild.props.id,
+							stroke: grandChild.props.stroke || overlayColors(grandChild.props.id),
+							displayLabel: grandChild.props.displayLabel,
+							percentYAccessor: (d) => d.compare["compare_" + grandChild.props.id],
+						});
+					}
+				});
+			}
+		});
+
 		return overlaysToAdd;
 	},
 	defineScales(props, data, passThroughProps) {
