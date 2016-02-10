@@ -10,6 +10,11 @@ var Utils = {
 	isReactVersion14() {
 		return React.version.split(".")[1] === "14";
 	},
+	keysAsArray(obj) {
+		return Object.keys(obj)
+			.filter( (key) => obj[key] !== null )
+			.map( (key) => obj[key] );
+	},
 	pluck(array, key) {
 		return array.map( (each) => Utils.getter(each, key) );
 	},

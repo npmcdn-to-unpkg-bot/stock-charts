@@ -37,6 +37,8 @@ class EventHandler extends PureComponent {
 		var beginIndex = Math.max(dataForInterval.length - initialDisplay, 0);
 		var plotData = dataForInterval.slice(beginIndex); // Main Data After the beginIndex.
 		var chartData = ChartDataUtil.getChartData(props, dimensions, plotData, data, options);
+		console.log('In Event Handlers will Mount');
+
 	}
 	getChildContext() {
 		return {

@@ -4,8 +4,10 @@ import React from 'react';
 
 class AxisLine extends React.Component {
 	render() {
-		var {} = this.props;
+		var { orient } = this.props;
 		var sign = orient === "top" || orient === "left" ? -1 : 1;
+
+		var range =
 		return (
 			<path
 				className={className}
@@ -19,3 +21,6 @@ class AxisLine extends React.Component {
 		);
 	}
 }
+
+
+<XAxis axisAt="bottom" orient="bottom" ticks={6}/>
