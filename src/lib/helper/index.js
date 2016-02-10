@@ -1,4 +1,5 @@
-import fitWidth from './fitWidth';
+
+import fitWidth from "./fitWidth";
 
 export default {
 	fitWidth,

@@ -19,6 +19,7 @@ var { pluck, keysAsArray } = Utils;
 
 		return charts.map( (each) => {
 			var chartProps = each.props;
+			var config = this.getChartConfigFor(innerDimensions, chartProps, partialData, fullData, other);
 
 			var config = this.getChartConfigFor(innerDimensions, chartProps, other);
 			calculateOverlays();
@@ -215,3 +216,4 @@ var { pluck, keysAsArray } = Utils;
 		return { xScale: xScale, yScale: yScale };
 	}
 
+module.exports = ChartDataUtil;

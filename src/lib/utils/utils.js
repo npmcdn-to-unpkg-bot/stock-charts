@@ -1,8 +1,12 @@
 "use strict";
 
 import React from "react";
+import d3 from "d3";
+
+var overlayColors = d3.scale.category10();
 
 var Utils = {
+	overlayColors: overlayColors,
 	isReactVersion13() {
 		var version = React.version.split(".")[1];
 		return version === "13";
@@ -17,6 +21,11 @@ var Utils = {
 	},
 	pluck(array, key) {
 		return array.map( (each) => Utils.getter(each, key) );
+	},
+	keysAsArray(obj) {
+		return Object.keys(obj)
+			.filter((key) => obj[key] !== null)
+			.map((key) => obj[key]);
 	},
 	getter(obj, pluckKey) {
 		var keys = pluckKey.split(".");
