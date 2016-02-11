@@ -2,11 +2,18 @@
 
 import React from "react";
 import PureComponent from "./utils/PureComponent";
-import ChartDataUtil from "./utils/ChartDataUtil";
+import { getMainChart, getChartDataConfig, getChartData, getDataToPlotForDomain } from "./utils/ChartDataUtil";
 import DummyTransformer from "./transforms";
+import Utils from "./utils/utils"
 
 import objectAssign from "object-assign";
 
+function getLongValue(value) {
+	if (value instanceof Date) {
+		return value.getTime();
+	}
+	return value;
+}
 class EventHandler extends PureComponent {
 	constructor(props, context) {
 		super(props, context);
@@ -33,8 +40,7 @@ class EventHandler extends PureComponent {
 		};
 	}
 	componentWillMount() {
-		console.log("In componentWillMount");
-		var { props, context } = this;
+		var { props } = this;
 		var { initialDisplay, rawData, defaultDataTransform, dataTransform, interval, dimensions } = props;
 
 		var transformedData = this.getTransformedData(rawData, defaultDataTransform, dataTransform, interval);
@@ -43,23 +49,31 @@ class EventHandler extends PureComponent {
 
 		var dataForInterval = data[interval];
 
-		var mainChart = ChartDataUtil.getMainChart(props.children);
+		var mainChart = getMainChart(props.children);
 		var beginIndex = Math.max(dataForInterval.length - initialDisplay, 0);
 		var plotData = dataForInterval.slice(beginIndex); // Main Data After the beginIndex.
-		var chartData = ChartDataUtil.getChartData(props, dimensions, plotData, data, options);
+		var chartConfig = getChartDataConfig(props, dimensions, options);
 
-		var chart = chartData.filter((eachChart) => eachChart.id ===mainChart)[0];
+		var chart = chartConfig.filter((eachChart) => eachChart.id ===mainChart)[0];
+
+		var domainL = getLongValue(chart.config.xAccessor(plotData[0]));
+		var domainR = getLongValue(chart.config.xAccessor(plotData[plotData.length - 1]));
+
+		var dataToPlot = getDataToPlotForDomain(domainL, domainR, data, chart.config.width, chart.config.xAccessor);
+		var updatePlotData = dataToPlot.data;
+
+		var chartData = getChartData(props, dimensions, plotData, data, options);
 
 		this.setState({
 			data: data,
 			rawData: rawData,
 			options: options,
-			plotData: plotData,
+			plotData: updatePlotData,
 			chartData: chartData,
 			interval: this.props.interval,
 			mainChart: mainChart,
-			currentCharts: [],
-			initialRenderer: true,
+			currentCharts: [mainChart],
+			initialRender: true,
 		});
 	}
 	componentWillReceiveProps(nextProps) {
@@ -120,6 +134,42 @@ class EventHandler extends PureComponent {
 
 EventHandler.defaultProps = {
 	defaultDataTransform: [ { transform: DummyTransformer } ],
+};
+
+EventHandler.childContextTypes = {
+	plotData: React.PropTypes.array,
+	chartData: React.PropTypes.array,
+	currentItems: React.PropTypes.array,
+	show: React.PropTypes.bool,
+	mouseXY: React.PropTypes.array,
+	interval: React.PropTypes.string,
+	currentCharts: React.PropTypes.array,
+	mainChart: React.PropTypes.number,
+	width: React.PropTypes.number.isRequired,
+	height: React.PropTypes.number.isRequired,
+	chartCanvasType: React.PropTypes.oneOf(["svg", "hybrid"]).isRequired,
+	dateAccessor: React.PropTypes.func,
+
+	margin: React.PropTypes.object.isRequired,
+	dataTransform: React.PropTypes.array,
+	interactiveState: React.PropTypes.array.isRequired,
+
+	subscribe: React.PropTypes.func,
+	unsubscribe: React.PropTypes.func,
+	callbackForCanvasDraw: React.PropTypes.func,
+	getAllCanvasDrawCallback: React.PropTypes.func,
+	getCanvasContexts: React.PropTypes.func,
+	onMouseMove: React.PropTypes.func,
+	onMouseEnter: React.PropTypes.func,
+	onMouseLeave: React.PropTypes.func,
+	onZoom: React.PropTypes.func,
+	onPanStart: React.PropTypes.func,
+	onPan: React.PropTypes.func,
+	onPanEnd: React.PropTypes.func,
+	panInProgress: React.PropTypes.bool.isRequired,
+	focus: React.PropTypes.bool.isRequired,
+	onFocus: React.PropTypes.func,
+	deltaXY: React.PropTypes.func,
 };
 
 export default EventHandler;

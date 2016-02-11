@@ -9,10 +9,15 @@ var serveStatic = require("serve-static")
 // Start a webpack-dev-server
 var server = new WebpackDevServer(watchCompiler, {
 	publicPath: watchConfig.output.publicPath,
-	// hot: true,
+	hot: true,
+	inline: true,
 	contentBase: watchConfig.devServer.contentBase,
 	quiet: false,
 	noInfo: false,
+	watchOptions: {
+		aggregateTimeout: 300,
+		poll: 1000
+	},
 	stats: {
 		colors: true
 	}

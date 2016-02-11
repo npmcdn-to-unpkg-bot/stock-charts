@@ -5,7 +5,7 @@ import d3 from "d3";
 
 import ReStock from "react-stockcharts";
 
-var {ChartCanvas} = ReStock;
+var {ChartCanvas, Chart} = ReStock;
 var { fitWidth } = ReStock.helper;
 
 export class CandleStickChart extends React.Component {

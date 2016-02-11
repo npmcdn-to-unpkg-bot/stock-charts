@@ -36,6 +36,23 @@ var Utils = {
 		});
 		return value;
 	},
+	getClosestItemIndexes(array, value, accessor) {
+		var lo = 0, hi = array.length - 1;
+		while (hi - lo > 1) {
+			var mid = Math.round((lo + hi) / 2);
+			if (accessor(array[mid]) <= value) {
+				lo = mid;
+			} else {
+				hi = mid;
+			}
+		}
+		if (accessor(array[lo]) === value) hi = lo;
+		// console.log(array[lo], array[hi], closestIndex, lo, hi);
+		return {
+			left: value > accessor(array[lo]) ? hi : lo,
+			right: value >= accessor(array[hi]) ? hi + 1 : hi
+		};
+	},
 };
 
 export default Utils;

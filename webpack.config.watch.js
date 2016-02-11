@@ -9,6 +9,7 @@ config.devServer = {
 
 config.output.publicPath = "http://localhost:" + config.devServer.port + "/" + config.output.publicPath;
 
+console.log(config.output.publicPath);
 
 config.externals = {
 	"d3": "d3"

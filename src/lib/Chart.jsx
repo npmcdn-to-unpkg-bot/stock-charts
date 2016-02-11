@@ -5,7 +5,7 @@ import objectAssign from "object-assign";
 
 import PureComponent from "./utils/PureComponent";
 import Utils from "./utils/utils";
-import ChartDataUtil from "./utils/ChartDataUtil";
+import { getChartOrigin } from "./utils/ChartDataUtil";
 
 class Chart extends PureComponent {
 	getChildContext() {
@@ -29,7 +29,7 @@ class Chart extends PureComponent {
 		};
 	}
 	render() {
-		var origin = ChartDataUtil.getChartOrigin(this.props.origin, this.context.width, this.context.height);
+		var origin = getChartOrigin(this.props.origin, this.context.width, this.context.height);
 		var children = React.Children.map(this.props.children, (child) => {
 			if (child === undefined || child === null) return child;
 			var newChild = Utils.isReactVersion13()

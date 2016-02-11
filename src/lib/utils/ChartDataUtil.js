@@ -2,7 +2,8 @@
 
 import React from "react";
 import d3 from "d3";
-import Utils from "./utils"
+import Utils from "./utils";
+import ScaleUtils from "../utils/ScaleUtils";
 
 var { pluck, keysAsArray } = Utils;
 
@@ -11,7 +12,15 @@ var { pluck, keysAsArray } = Utils;
 	};
 
 	export function getCharts(props) {
-		return this.getChildren(props.children, /Chart$/);
+		return getChildren(props.children, /Chart$/);
+	};
+
+	export function getChartDataConfig(props, innerDimensions, other) {
+		var charts = getCharts(props);
+		return charts.map( (each) => ({
+			id: each.props.id,
+			config: getChartConfigFor(innerDimensions, each.props, other),
+		}));
 	};
 
 	export function getChartData(props, innerDimensions, partialData, fullData, other, domainL, domainR) {
@@ -19,18 +28,42 @@ var { pluck, keysAsArray } = Utils;
 
 		return charts.map( (each) => {
 			var chartProps = each.props;
-			var config = this.getChartConfigFor(innerDimensions, chartProps, partialData, fullData, other);
 
-			var config = this.getChartConfigFor(innerDimensions, chartProps, other);
-			calculateOverlays();
-			var plot = this.getChartPlotFor(config, partialData, domainL, domainR);
+			var config = getChartConfigFor(innerDimensions, chartProps, other);
+			calculateOverlays(fullData, config.overlays);
+			var scaleType = defineScales(chartProps, partialData, other);
+
+			var plot = getChartPlotFor(config, scaleType, partialData, domainL, domainR);
 
 			return {
 				id: each.props.id,
 				config: config,
+				scaleType: scaleType,
 				plot: plot,
 			};
 		});
+	};
+
+	export function calculateOverlays(fullData, overlays) {
+		if (Array.isArray(fullData)) {
+			overlays
+				.filter((eachOverlay) => eachOverlay.id !== undefined)
+				.forEach((overlay) => {
+					overlay.indicator.calculate(fullData);
+				});
+		} else {
+			Object.keys(fullData)
+				.filter((key) => ["D", "W", "M"].indexOf(key) > -1)
+				.forEach((key) => {
+					overlays
+						.filter((eachOverlay) => eachOverlay.indicator !== undefined)
+						.forEach((overlay) => {
+							overlay.indicator.calculate(fullData[key]);
+						});
+				});
+		}
+		// console.table(fullData.M);
+		// console.log(overlays);
 	};
 
 	export function getChartConfigFor(innerDimension, chartProps, other) {
@@ -58,10 +91,6 @@ var { pluck, keysAsArray } = Utils;
 				.reduce((ticks1, ticks2) => ticks1.concat(ticks2));
 		}
 
-		var scales = this.defineScales(chartProps, partialData, passThroughProps);
-
-		//TODO: IndicatorWithTicks
-
 		var config = {
 			width: dimensions.width,
 			height: dimensions.height,
@@ -82,6 +111,40 @@ var { pluck, keysAsArray } = Utils;
 			yTicks: yTicks,
 		};
 		return config;
+	};
+
+	export function getDataToPlotForDomain(domainL, domainR, data, width, xAccessor) {
+		var threshold = 0.5; // number of datapoints per 1 px
+		var allowedIntervals = ["D", "W", "M"];
+		// console.log(domainL, domainR, data, width);
+
+		var dataForInterval, filteredData, interval, leftIndex, rightIndex;
+
+		for (var i = 0; i < allowedIntervals.length; i++) {
+			if (!data[allowedIntervals[i]]) continue;
+			interval = allowedIntervals[i];
+			dataForInterval = data[interval];
+
+			leftIndex = Utils.getClosestItemIndexes(dataForInterval, domainL, xAccessor).left;
+			rightIndex = Utils.getClosestItemIndexes(dataForInterval, domainR, xAccessor).right;
+
+			// leftIndex = leftX.left;
+			// rightIndex = rightX.right;
+
+			filteredData = dataForInterval.slice(leftIndex, rightIndex);
+
+			// console.log(filteredData.length, width * threshold);
+			if (filteredData.length < width * threshold) break;
+		}
+
+		// console.log(leftX, rightX,  (dd[leftX.left]), xAccessor(dd[rightX.right]));
+
+		return {
+			interval: interval,
+			data: filteredData,
+			leftIndex: leftIndex,
+			rightIndex: rightIndex
+		};
 	};
 
 	export function getDimensions(innerDimension, chartProps) {
@@ -164,23 +227,96 @@ var { pluck, keysAsArray } = Utils;
 		return overlaysToAdd;
 	};
 
-	getChildren(children, regex) {
+	export function getChildren(children, regex) {
 		var matchingChildren = [];
 		React.Children.forEach(children, (child) => {
 			if(React.isValidElement(child) && regex.test(child.props.namespace)) matchingChildren.push(child);
 		});
 		return matchingChildren;
-	},
-	getMainChart(children) {
-		var eventCapture = this.getChildren(children, /EventCapture$/);
+	};
+
+	export function getMainChart(children) {
+		var eventCapture = getChildren(children, /EventCapture$/);
 		if (eventCapture.length > 1) throw new Error("only one EventCapture allowed");
 		if (eventCapture.length > 0) return eventCapture[0].props.mainChart;
-		if (eventCapture.length == 0) return this.getChildren(children, /Chart$/)[0].props.id;
-	},
-	getChartPlotFor(config, partialData, domainL, domainR) {
+		if (eventCapture.length == 0) return getChildren(children, /Chart$/)[0].props.id;
+	};
+
+	export function getChartPlotFor(config, scaleType, partialData, domainL, domainR) {
 		var yaccessors = pluck(keysAsArray(config.overlays), "yAccessor");
-	},
-	identifyCompareBase(props) {
+		// console.log(yaccessors);
+		if (config.compareSeries.length > 0) {
+			updateComparisonData(partialData, config.compareBase, config.compareSeries);
+			yaccessors = [(d) => d.compare];
+		}
+		var xyValues = ScaleUtils.flattenData(partialData
+				, [config.xAccessor]
+				, yaccessors);
+
+		var overlayValues = updateOverlayFirstLast(partialData, config.overlays);
+		var indicators = Utils.pluck(keysAsArray(config.overlays), "indicator");
+		var domains = indicators
+			.filter(indicator => indicator !== undefined)
+			.filter(indicator => indicator.domain !== undefined)
+			.map(indicator => indicator.domain());
+
+		var domain;
+		if (domains.length > 0) {
+			domain = domains.reduce((a, b) => {
+				return [Math.min(a[0], b[0]), Math.max(a[1], b[1])];
+			});
+		}
+
+		var scales = updateScales(
+			xyValues,
+			scaleType,
+			partialData,
+			config.width,
+			config.height,
+			config.padding,
+			domain);
+
+		if (domainL !== undefined && domainR !== undefined) {
+			scales.xScale.domain([domainL, domainR]);
+		}
+
+		var plot = {
+			overlayValues: overlayValues,
+			scales: scales,
+		};
+		return plot;
+	};
+
+	export function updateScales(xyValues, scales, data, width, height, padding, overrideDomain) {
+		// console.log("updateScales");
+		// width = width - margin.left - margin.right/**/
+		// height = height - margin.top - margin.bottom/**/
+
+		scales.xScale.range([padding.left, width - padding.right]);
+		// if polylinear scale then set data
+		if (scales.xScale.isPolyLinear && scales.xScale.isPolyLinear()) {
+			scales.xScale.data(data);
+		} else {
+			// else set the domain
+			scales.xScale.domain(d3.extent(xyValues.xValues));
+		}
+
+		scales.yScale.range([height - padding.top, padding.bottom]);
+
+		if (overrideDomain !== undefined) {
+			scales.yScale.domain(overrideDomain);
+		} else {
+			var domain = d3.extent(xyValues.yValues);
+			scales.yScale.domain(domain);
+		}
+
+		return {
+			xScale: scales.xScale.copy(),
+			yScale: scales.yScale.copy()
+		};
+	};
+
+	export function identifyCompareBase(props) {
 		var compareBase;
 		React.Children.forEach(props.children, (child) => {
 			if(React.isValidElement(child) && /DataSeries$/.test(child.props.namespace)) {
@@ -188,12 +324,14 @@ var { pluck, keysAsArray } = Utils;
 			}
 		});
 		return compareBase;
-	},
-	identifyCompareSeries(props) {
+	};
+
+	export function identifyCompareSeries(props) {
 		var overlaysToAdd = [];
 		return overlaysToAdd;
-	},
-	defineScales(props, data, passThroughProps) {
+	};
+
+	export function defineScales(props, data, passThroughProps) {
 		var xScale = props.xScale,
 			yScale = props.yScale;
 
@@ -214,6 +352,28 @@ var { pluck, keysAsArray } = Utils;
 			yScale = d3.scale.linear();
 		}
 		return { xScale: xScale, yScale: yScale };
-	}
+	};
 
-module.exports = ChartDataUtil;
+	export function getChartOrigin(origin, contextWidth, contextHeight) {
+		var originCoordinates = typeof origin === "function"
+			? origin(contextWidth, contextHeight)
+			: origin;
+		return originCoordinates;
+	};
+
+	export function updateOverlayFirstLast(data, overlays) {
+		// console.log("updateOverlayFirstLast");
+		var overlayValues = [];
+
+		overlays
+			.forEach((eachOverlay) => {
+				// console.log(JSON.stringify(first), Object.keys(first), yAccessor(first));
+				overlayValues.push({
+					id: eachOverlay.id,
+					first: firstDefined(data, eachOverlay.yAccessor),
+					last: lastDefined(data, eachOverlay.yAccessor),
+				});
+			});
+		return overlayValues;
+	};
+
