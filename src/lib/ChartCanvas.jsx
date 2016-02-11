@@ -31,7 +31,6 @@ class ChartCanvas extends React.Component {
 	}
 	render() {
 		var dimensions = this.getDimensions(this.props);
-		console.log(dimensions);
 		var style = `<![CDATA[
 						.react-stockcharts-grabbing-cursor {
 							cursor: grabbing;
@@ -61,12 +60,12 @@ class ChartCanvas extends React.Component {
 						</clipPath>
 					</defs>
 					<g transform={`translate(${margin.left + 0.5}, ${margin.top + 0.5})`}>
-						{<EventHandler ref="chartContainer"
+						<EventHandler ref="chartContainer"
 								rawData={data} dataTransform={dataTransform} interval={interval}
 								initialDisplay={initialDisplay}
 								dimensions={dimensions} type={type} margin={margin} canvasContexts={this.getCanvases}>
 								{this.props.children}
-						</EventHandler>}
+						</EventHandler>
 					</g>
 				</svg>
 			</div>

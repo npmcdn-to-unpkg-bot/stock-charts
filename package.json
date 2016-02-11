@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "clean": "rimraf -rf ./build",
-    "watch": "node scripts/watch.js",
+    "watch": "npm run build && ncp docs/images/ build/images && ncp docs/data/ build/data && node scripts/copyhtml.js && node scripts/watch.js",
     "docs": "npm run build:docs && ncp docs/images/ build/images && ncp docs/data/ build/data && node scripts/copyhtml.js",
     "build": "npm run clean && npm run build:dev",
     "build:dev": "echo 'DEV -- BUILD' && webpack --config webpack.config.js --debug --progress --colors",
-    "build:docs": "npm run build && echo 'DOCS - BUILD' && webpack --config webpack.config.docs.js --debug --progress --colors",
+    "build:docs": "npm run build && echo 'DOCS - BUILD' && webpack-dev-server --config webpack.config.docs.js --debug --progress --colors",
     "lint": "eslint --ext .js,.jsx src --fix",
     "test": "mocha --compilers js:babel-core/register --recursive"
   },

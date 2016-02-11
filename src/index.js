@@ -13,5 +13,6 @@ export default {
 	ChartCanvas,
 	helper,
 	version,
+	helper,
 	Utils
 };

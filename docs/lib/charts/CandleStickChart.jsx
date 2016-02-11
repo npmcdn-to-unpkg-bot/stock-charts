@@ -5,7 +5,7 @@ import d3 from "d3";
 
 import ReStock from "react-stockcharts";
 
-var { ChartCanvas, Chart } = ReStock;
+var {ChartCanvas, Chart} = ReStock;
 var { fitWidth } = ReStock.helper;
 
 export class CandleStickChart extends React.Component {
@@ -32,6 +32,7 @@ CandleStickChart.propTypes = {
 CandleStickChart.defaultProps = {
 	type: "svg",
 };
+
 CandleStickChart = fitWidth(CandleStickChart);
 
 export default CandleStickChart;

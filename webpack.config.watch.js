@@ -1,4 +1,4 @@
-var config = require("./webpack.config.js");
+var config = require("./webpack.config.docs.js");
 
 var path = require("path");
 
@@ -9,6 +9,7 @@ config.devServer = {
 
 config.output.publicPath = "http://localhost:" + config.devServer.port + "/" + config.output.publicPath;
 
+console.log(config.output.publicPath);
 
 config.externals = {
 	"d3": "d3"
