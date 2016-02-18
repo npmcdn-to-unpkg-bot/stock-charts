@@ -3,56 +3,87 @@
 import React from "react";
 import d3 from "d3";
 
-var overlayColors = d3.scale.category10();
+export const overlayColors = d3.scale.category10();
 
-var Utils = {
-	overlayColors: overlayColors,
-	isReactVersion13() {
-		var version = React.version.split(".")[1];
-		return version === "13";
-	},
-	isReactVersion14() {
-		return React.version.split(".")[1] === "14";
-	},
-	keysAsArray(obj) {
-		return Object.keys(obj)
-			.filter( (key) => obj[key] !== null )
-			.map( (key) => obj[key] );
-	},
-	pluck(array, key) {
-		return array.map( (each) => Utils.getter(each, key) );
-	},
-	keysAsArray(obj) {
-		return Object.keys(obj)
-			.filter((key) => obj[key] !== null)
-			.map((key) => obj[key]);
-	},
-	getter(obj, pluckKey) {
-		var keys = pluckKey.split(".");
-		var value;
-		keys.forEach(key => {
-			if (!value) value = obj[key];
-			else value = value[key];
-		});
-		return value;
-	},
-	getClosestItemIndexes(array, value, accessor) {
-		var lo = 0, hi = array.length - 1;
-		while (hi - lo > 1) {
-			var mid = Math.round((lo + hi) / 2);
-			if (accessor(array[mid]) <= value) {
-				lo = mid;
-			} else {
-				hi = mid;
-			}
-		}
-		if (accessor(array[lo]) === value) hi = lo;
-		// console.log(array[lo], array[hi], closestIndex, lo, hi);
-		return {
-			left: value > accessor(array[lo]) ? hi : lo,
-			right: value >= accessor(array[hi]) ? hi + 1 : hi
-		};
-	},
+export function isReactVersion13() {
+    var version = React.version.split(".")[1];
+    return version === "13";
+};
+export function isReactVersion14() {
+    return React.version.split(".")[1] === "14";
+};
+export function keysAsArray(obj) {
+    return Object.keys(obj)
+        .filter((key) => obj[key] !== null)
+        .map((key) => obj[key]);
+};
+export function pluck(array, key) {
+    return array.map((each) => getter(each, key));
+};
+export function keysAsArray(obj) {
+    return Object.keys(obj)
+        .filter((key) => obj[key] !== null)
+        .map((key) => obj[key]);
+};
+export function getter(obj, pluckKey) {
+    var keys = pluckKey.split(".");
+    var value;
+    keys.forEach(key => {
+        if (!value) value = obj[key];
+        else value = value[key];
+    });
+    return value;
+};
+export function getClosestItemIndexes(array, value, accessor) {
+    var lo = 0,
+        hi = array.length - 1;
+    while (hi - lo > 1) {
+        var mid = Math.round((lo + hi) / 2);
+        if (accessor(array[mid]) <= value) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    if (accessor(array[lo]) === value) hi = lo;
+    // console.log(array[lo], array[hi], closestIndex, lo, hi);
+    return {
+        left: value > accessor(array[lo]) ? hi : lo,
+        right: value >= accessor(array[hi]) ? hi + 1 : hi
+    };
 };
 
-export default Utils;
+export function getClosestItem(array, value, accessor) {
+	var lo = 0, hi = array.length - 1;
+	while (hi - lo > 1) {
+		var mid = Math.round((lo + hi) / 2);
+		if (accessor(array[mid]) <= value) {
+			lo = mid;
+		} else {
+			hi = mid;
+		}
+	}
+	if (accessor(array[lo]) === value) hi = lo;
+	var closest = (Math.abs(accessor(array[lo]) - value) < Math.abs(accessor(array[hi]) - value))
+						? array[lo]
+						: array[hi];
+	// console.log(array[lo], array[hi], closest, lo, hi);
+	return cloneMe(closest);
+};
+
+export function hexToRGBA(inputHex, opacity) {
+    var hex = inputHex.replace("#", "");
+    if (inputHex.indexOf("#") > -1 && (hex.length === 3 || hex.length === 6)) {
+
+        var multiplier = (hex.length === 3) ? 1 : 2;
+
+        var r = parseInt(hex.substring(0, 1 * multiplier), 16);
+        var g = parseInt(hex.substring(1 * multiplier, 2 * multiplier), 16);
+        var b = parseInt(hex.substring(2 * multiplier, 3 * multiplier), 16);
+
+        var result = `rgba(${ r }, ${ g }, ${ b }, ${ opacity })`;
+
+        return result;
+    }
+    return inputHex;
+};

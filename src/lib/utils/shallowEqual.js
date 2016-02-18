@@ -25,8 +25,8 @@ function isPrimitive(value) {
 };
 
 function shallowEqual(a, b) {
-	if(!a && !b) { return true; } //Both are either null or undefined.
-	if(!a && b || a && !b) { return false;}
+	if (!a && !b) { return true; } //Both are either null or undefined.
+	if (!a && b || a && !b) { return false;}
 
 	var numKeysA = 0, numKeysB = 0, key;
 	for (key in b) {

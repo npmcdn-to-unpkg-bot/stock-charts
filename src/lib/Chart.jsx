@@ -1,10 +1,10 @@
-"use strict"
+"use strict";
 
 import React from 'react';
 import objectAssign from "object-assign";
 
 import PureComponent from "./utils/PureComponent";
-import Utils from "./utils/utils";
+import { isReactVersion13 } from "./utils/utils";
 import { getChartOrigin } from "./utils/ChartDataUtil";
 
 class Chart extends PureComponent {
@@ -32,7 +32,7 @@ class Chart extends PureComponent {
 		var origin = getChartOrigin(this.props.origin, this.context.width, this.context.height);
 		var children = React.Children.map(this.props.children, (child) => {
 			if (child === undefined || child === null) return child;
-			var newChild = Utils.isReactVersion13()
+			var newChild = isReactVersion13()
 			? React.withContext(this.getChildContext(), () => {
 				return React.createElement(child.type, objectAssign( { key: child.key, ref: child.ref}, child.props ));
 			})

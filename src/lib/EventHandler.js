@@ -4,7 +4,7 @@ import React from "react";
 import PureComponent from "./utils/PureComponent";
 import { getMainChart, getChartDataConfig, getChartData, getDataToPlotForDomain } from "./utils/ChartDataUtil";
 import DummyTransformer from "./transforms";
-import Utils from "./utils/utils"
+import { isReactVersion13 } from "./utils/utils";
 
 import objectAssign from "object-assign";
 
@@ -17,7 +17,8 @@ function getLongValue(value) {
 class EventHandler extends PureComponent {
 	constructor(props, context) {
 		super(props, context);
-		// Event Handler.
+
+		this.getCanvasContexts = this.getCanvasContexts.bind(this);
 
 		this.state = {
 
@@ -79,6 +80,9 @@ class EventHandler extends PureComponent {
 	componentWillReceiveProps(nextProps) {
 		console.log("In componentWillReceiveProps");
 	}
+	getCanvasContexts() {
+		return this.state.canvas || this.props.canvasContexts();
+	}
 	getChildContext() {
 		return {
 			plotData: this.state.plotData,
@@ -118,7 +122,7 @@ class EventHandler extends PureComponent {
 	}
 	render() {
 		var children = React.Children.map(this.props.children, (child) => {
-			var newChild = Utils.isReactVersion13()
+			var newChild = isReactVersion13()
 				? React.withContext(this.getChildContext(), () => {
 					return React.createElement(child.type, objectAssign({key: child.key, ref: child.ref}, child.props));
 				})
