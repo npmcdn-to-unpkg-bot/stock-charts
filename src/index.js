@@ -7,6 +7,7 @@ import * as Utils from "./lib/utils/utils";
 import helper from "./lib/helper";
 import axes from "./lib/axes";
 import DataSeries from "./lib/DataSeries";
+import series from "./lib/series"
 
 const version = "0.0.1";
 
@@ -15,6 +16,7 @@ export default {
 	ChartCanvas,
 	DataSeries,
 	helper,
+	series,
 	version,
 	helper,
 	axes,

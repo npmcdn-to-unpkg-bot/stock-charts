@@ -12,6 +12,24 @@ export function isReactVersion13() {
 export function isReactVersion14() {
     return React.version.split(".")[1] === "14";
 };
+
+export function cloneMe(obj) {
+    if (obj == null || typeof (obj) !== "object") {
+        return obj;
+    }
+    if (obj instanceof Date) {
+        return new Date(obj.getTime());
+    }
+    var temp = {}; // obj.constructor(); // changed
+
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            temp[key] = cloneMe(obj[key]);
+        }
+    }
+    return temp;
+};
+
 export function keysAsArray(obj) {
     return Object.keys(obj)
         .filter((key) => obj[key] !== null)

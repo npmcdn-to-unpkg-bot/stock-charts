@@ -3,6 +3,7 @@
 import React from "react";
 import d3 from "d3";
 import { getClosestItem, getClosestItemIndexes, overlayColors, pluck, keysAsArray } from "./utils";
+import { firstDefined, lastDefined } from "./OverlayUtils"
 import ScaleUtils from "../utils/ScaleUtils";
 
 
