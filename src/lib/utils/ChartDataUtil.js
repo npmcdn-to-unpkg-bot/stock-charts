@@ -2,10 +2,11 @@
 
 import React from "react";
 import d3 from "d3";
-import Utils from "./utils";
+import { getClosestItem, getClosestItemIndexes, overlayColors, pluck, keysAsArray } from "./utils";
+import { firstDefined, lastDefined } from "./OverlayUtils"
 import ScaleUtils from "../utils/ScaleUtils";
 
-var { pluck, keysAsArray } = Utils;
+
 
 	export function containsChart(props) {
 		return getCharts(props).length > 0;
@@ -125,8 +126,8 @@ var { pluck, keysAsArray } = Utils;
 			interval = allowedIntervals[i];
 			dataForInterval = data[interval];
 
-			leftIndex = Utils.getClosestItemIndexes(dataForInterval, domainL, xAccessor).left;
-			rightIndex = Utils.getClosestItemIndexes(dataForInterval, domainR, xAccessor).right;
+			leftIndex = getClosestItemIndexes(dataForInterval, domainL, xAccessor).left;
+			rightIndex = getClosestItemIndexes(dataForInterval, domainR, xAccessor).right;
 
 			// leftIndex = leftX.left;
 			// rightIndex = rightX.right;
@@ -230,7 +231,7 @@ var { pluck, keysAsArray } = Utils;
 	export function getChildren(children, regex) {
 		var matchingChildren = [];
 		React.Children.forEach(children, (child) => {
-			if(React.isValidElement(child) && regex.test(child.props.namespace)) matchingChildren.push(child);
+			if (React.isValidElement(child) && regex.test(child.props.namespace)) matchingChildren.push(child);
 		});
 		return matchingChildren;
 	};
@@ -254,7 +255,7 @@ var { pluck, keysAsArray } = Utils;
 				, yaccessors);
 
 		var overlayValues = updateOverlayFirstLast(partialData, config.overlays);
-		var indicators = Utils.pluck(keysAsArray(config.overlays), "indicator");
+		var indicators = pluck(keysAsArray(config.overlays), "indicator");
 		var domains = indicators
 			.filter(indicator => indicator !== undefined)
 			.filter(indicator => indicator.domain !== undefined)
@@ -319,7 +320,7 @@ var { pluck, keysAsArray } = Utils;
 	export function identifyCompareBase(props) {
 		var compareBase;
 		React.Children.forEach(props.children, (child) => {
-			if(React.isValidElement(child) && /DataSeries$/.test(child.props.namespace)) {
+			if (React.isValidElement(child) && /DataSeries$/.test(child.props.namespace)) {
 				compareBase = child.props.compareBase;
 			}
 		});
@@ -346,7 +347,7 @@ var { pluck, keysAsArray } = Utils;
 					}
 				});
 			}
-			if(xScale === undefined) xScale = d3.scale.linear();
+			if (xScale === undefined) xScale = d3.scale.linear();
 		}
 		if (yScale === undefined) {
 			yScale = d3.scale.linear();

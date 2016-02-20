@@ -1,17 +1,17 @@
 'use strict';
 
 import React from 'react';
-import objectAssign from 'object-assign';
+import objectAssign	from 'object-assign';
 
-import Utils from "../utils/utils";
+import { hexToRGBA } from "../utils/utils";
 
 function d3_scaleExtent(domain) {
-	var start = domain[0], stop = domain[domain.length - 1];
+	var start = domain[0] , stop = domain[domain.length - 1];
 	return start < stop ? [start, stop] : [stop, start];
 }
 
 function d3_scaleRange(scale) {
-	return scale.rangeExtent ? scale.rangeExtent() : d3_scaleExtent(scale.range());
+	return scale.rangeExtent ? scale.rangeExtent : d3_scaleExtent(scale.range());
 }
 
 class AxisLine extends React.Component {
@@ -19,7 +19,7 @@ class AxisLine extends React.Component {
 		var { orient, scale, outerTickSize, fill, stroke, strokeWidth, className, shapeRendering, opacity } = this.props;
 		var sign = orient === "top" || orient === "left" ? -1 : 1;
 
-		var range = d3_scaleRange(scale);
+		/*var range =*/
 
 		var d;
 
@@ -57,25 +57,26 @@ AxisLine.propTypes = {
 
 AxisLine.defaultProps = {
 	className: "react-stockcharts-axis-line",
-	shapeRendering: "crispEdges",
+	shapeRendering: "cripEdges",
 	outerTickSize: 6,
 	fill: "none",
 	stroke: "#000000",
 	strokeWidth: 1,
-	opacity: 1,
+	opacity: 1
 };
 
 AxisLine.drawOnCanvasStatic = (props, ctx, chartData, xScale, yScale) => {
 	props = objectAssign({}, AxisLine.defaultProps, props);
 
-	var { orient, outerTickSize, fill, stroke, strokeWidth, className, shapeRendering, opacity } = props;
+	var { orient, outerTickSize, stroke, strokeWidth, opacity } = props;
 
 	var sign = orient === "top" || orient === "left" ? -1 : 1;
 	var xAxis = (orient === "bottom" || orient === "top");
 
-	var range = d3_scaleRange(xAxis ? xScale : yScale);
+	var range = d3_scaleRange(xAxis	? xScale : yScale);
 
-	ctx.strokeStyle = Utils.hexToRGBA(stroke, opacity);
+	ctx.lineWidth = strokeWidth;
+	ctx.strokeStyle = hexToRGBA(stroke, opacity);
 
 	ctx.beginPath();
 

@@ -40,7 +40,7 @@ export default function fitWidth(Component, withRef = true) {
 
 	  	if (this.state && this.state.width) {
 	  		return <Component width={this.state.width} {...this.props} {...ref} />;
-	  	} else{
+	  	} else {
 	  		return <div />;
 	  	}
 	  }

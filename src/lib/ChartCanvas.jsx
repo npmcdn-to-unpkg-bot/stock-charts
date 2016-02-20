@@ -25,7 +25,7 @@ class ChartCanvas extends React.Component {
 		this.refs.chartContainer.alterData(array);
 	}
 	getCanvases() {
-		if( this.refs && this.refs.canvases ) {
+		if ( this.refs && this.refs.canvases ) {
 			return this.refs.canvases.getCanvasContexts();
 		}
 	}

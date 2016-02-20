@@ -5,8 +5,11 @@ import d3 from "d3";
 
 import ReStock from "react-stockcharts";
 
-var {ChartCanvas, Chart} = ReStock;
+var { ChartCanvas, Chart, DataSeries } = ReStock;
+
+var { CandlestickSeries } = ReStock.series;
 var { fitWidth } = ReStock.helper;
+var { XAxis, YAxis } = ReStock.axes;
 
 export class CandleStickChart extends React.Component {
 	render() {
@@ -16,7 +19,11 @@ export class CandleStickChart extends React.Component {
 				margin={{left: 50, right: 50, top:10, bottom: 30}}
 				data={data.slice(0, 150)} type={type} >
 				<Chart id={1} xAccessor={(d) => d.date}>
-
+					<XAxis axisAt="bottom" orient="bottom" ticks={6}/>
+					<YAxis axisAt="left" orient="left" ticks={5} />
+					<DataSeries id={0} yAccessor={CandlestickSeries.yAccessor} >
+						<CandlestickSeries />
+					</DataSeries>
 				</Chart>
 			</ChartCanvas>
 		);
