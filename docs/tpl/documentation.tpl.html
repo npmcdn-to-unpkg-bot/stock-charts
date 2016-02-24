@@ -7,11 +7,20 @@
     <meta name="description" content="Highly customizable stock charts">
     <meta name="author" content="rrag">
 
-    <title>React Stockcharts - Home</title>
+    <title>React Stockcharts - Reference</title>
+
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react-with-addons.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/0.0.1/prism.css">
+    <!--
+    <link href="remarkable-loader/node_modules/highlight.js/styles/default.css" rel="stylesheet">
+    -->
+    <style>
+      body {
+        padding-top: 50px;
+      }
+    </style>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -21,36 +30,10 @@
       ga('send', 'pageview');
     </script>
   </head>
+
   <body>
+    <!-- Placed at the end of the document so the pages load faster -->
+    <div id="chart-goes-here"></div>
 
-    <!-- Main jumbotron for a primary marketing message or call to action -->
-    <div class="jumbotron">
-      <div class="container" id="README.md">
-        <div class="row">
-          <div class="col-md-8" id="content">
-          </div>
-          <div class="col-md-4">
-            <div class="pull-right top-spacing">
-              <a href="https://github.com/rrag/react-stockcharts" class="btn btn-lg button"><small>View project on</small><br/> GitHub</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <!-- Example row of columns -->
-      <div class="row">
-        <div class="col-md-12">
-          <h3>Go ahead, zoom & pan away</h3>
-          <div id="chart" class="react-stockchart"></div>
-          <a class="btn btn-primary" href="documentation.html" role="button">Refer to Documentation</a>
-        </div>
-      </div>
-      <hr>
-      <footer>
-        <p>MIT license</p>
-      </footer>
-    </div> <!-- /container -->
   </body>
 </html>

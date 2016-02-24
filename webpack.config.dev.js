@@ -8,13 +8,18 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = {
 	debug: true,
 	devtool: "sourcemap",
-	entry: [
+/*	entry: [
 		'webpack-hot-middleware/client?reload=true',
-		path.join(__dirname, 'docs/index.js')
-	],
+		path.join(__dirname, 'docs/index.js'),
+		path.join(__dirname, 'docs/documentation.js')
+	],*/
+	entry: {
+		"stock-charts-home": [path.join(__dirname, 'docs/index.js'), 'webpack-hot-middleware/client?reload=true'],
+		"stockcharts-documentation": [path.join(__dirname, 'docs/documentation.js'), 'webpack-hot-middleware/client?reload=true']
+	},
 	output: {
 		path: path.join(__dirname, '/dist'),
-		filename: 'stock-charts-home.js',
+		filename: '[name].js',
 		publicPath: '/'
 	},
 	plugins: [
@@ -22,6 +27,12 @@ module.exports = {
 			template: 'docs/tpl/index.tpl.html',
 			inject: 'body',
 			filename: 'index.html'
+		}),
+		new HtmlWebpackPlugin({
+			template: 'docs/tpl/documentation.tpl.html',
+			inject: 'body',
+			filename: 'documentation.html',
+			chunks: ['stockcharts-documentation']
 		}),
 		new CopyWebpackPlugin([
 			{ from: path.join(__dirname, 'docs/data') , to: 'data'}
