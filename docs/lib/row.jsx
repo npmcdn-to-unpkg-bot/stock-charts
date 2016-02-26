@@ -16,7 +16,7 @@ var Row = React.createClass({
 			<div className="row">
 				{title}
 				{this.props.children}
-			<div>
+			</div>
 		);
 	}
 });

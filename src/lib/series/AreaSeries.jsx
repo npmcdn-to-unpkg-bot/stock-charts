@@ -1,0 +1,53 @@
+"use strict";
+
+import React from "react";
+
+import Line from "./Line";
+import Area from "./Area";
+
+import wrap from "./wrap";
+
+class AreaSeries extends React.Component {
+	render() {
+		var { props } = this;
+		let { className, xScale, yScale, xAccessor, yAccessor, plotData, type, stroke, fill } = props;
+
+		let { opacity } = props;
+
+		return (
+			<g>
+				<Line
+					className={className}
+					xScale={xScale} yScale={yScale}
+					xAccessor={xAccessor} yAccessor={yAccessor}
+					plotData={plotData}
+					stroke={stroke} fill="none"
+					type={type} />
+				<Area
+					className={className}
+					xScale={xScale} yScale={yScale}
+					xAccessor={xAccessor} yAccessor={yAccessor}
+					plotData={plotData}
+					stroke="none" fill={fill} opacity={opacity}
+					type={type} />
+			</g>
+		);
+	}
+}
+
+AreaSeries.propTypes = {
+	stroke: React.PropTypes.string,
+	fill: React.PropTypes.string.isRequired,
+	opacity: React.PropTypes.number.isRequired,
+	className: React.PropTypes.string,
+};
+
+AreaSeries.defaultProps = {
+	stroke: "#4682B4",
+	opacity: 0.5,
+	fill: "#4682B4",
+};
+
+AreaSeries.yAccessor = (d) => d.close;
+
+export default wrap(AreaSeries);

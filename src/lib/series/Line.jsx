@@ -1,0 +1,68 @@
+"use strict";
+
+import React from "react";
+import d3 from "d3";
+
+import wrap from "./wrap";
+
+class Line extends React.Component {
+	render() {
+		var { stroke, fill, className } = this.props;
+
+		className = className.concat((stroke) ? "" : " line-stroke");
+		return <path d={Line.getPath(this.props)} stroke={stroke} fill={fill} className={className}/>;
+	}
+}
+
+Line.propTypes = {
+	className: React.PropTypes.string,
+	xScale: React.PropTypes.func.isRequired,
+	yScale: React.PropTypes.func.isRequired,
+	xAccessor: React.PropTypes.func.isRequired,
+	yAccessor: React.PropTypes.func.isRequired,
+	plotData: React.PropTypes.array.isRequired,
+	stroke: React.PropTypes.string,
+	fill: React.PropTypes.string,
+};
+
+Line.defaultProps = {
+	className: "line ",
+	fill: "none",
+	stroke: "black"
+};
+
+Line.getPath = (props) => {
+	var { plotData, xScale, yScale, xAccessor, yAccessor } = props;
+
+	var dataSeries = d3.svg.line()
+		.defined((d) =>(yAccessor(d) !== undefined))
+		.x((d) => xScale(xAccessor(d)))
+		.y((d) => yScale(yAccessor(d)));
+	return dataSeries(plotData);
+};
+
+Line.drawOnCanvas = (props, ctx, xScale, yScale, plotData) => {
+	var { xAccessor, yAccessor, stroke } = props;
+
+	ctx.strokeStyle = stroke;
+	ctx.beginPath();
+
+	var begin = true;
+	plotData.forEach((d) => {
+		if (yAccessor(d) === undefined) {
+			ctx.stroke();
+			ctx.beginPath();
+			begin = true;
+		} else {
+			if (begin) {
+				begin = false;
+				let [x, y] = [~~ (0.5 + xScale(xAccessor(d))), ~~ (0.5 + yScale(yAccessor(d)))];
+				ctx.moveTo(x, y);
+			}
+			ctx.lineTo(xScale(xAccessor(d)), yScale(yAccessor(d)));
+		}
+	});
+	ctx.stroke();
+};
+
+export default wrap(Line);
