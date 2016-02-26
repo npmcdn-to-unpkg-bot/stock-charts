@@ -19,6 +19,9 @@ class EventHandler extends PureComponent {
 		super(props, context);
 
 		this.getCanvasContexts = this.getCanvasContexts.bind(this);
+		this.pushCallbackForCanvasDraw = this.pushCallbackForCanvasDraw.bind(this);
+
+		this.canvasDrawCallbackList = [];
 
 		this.state = {
 
@@ -119,6 +122,18 @@ class EventHandler extends PureComponent {
 			panInProgress: this.state.panInProgress,
 			focus: this.state.focus
 		};
+	}
+	pushCallbackForCanvasDraw(findThis, replaceWith) {
+		var { canvasDrawCallbackList } = this;
+		if (replaceWith) {
+			canvasDrawCallbackList.forEach((each, idx) => {
+				if (each === findThis) {
+					canvasDrawCallbackList[idx] = replaceWith;
+				}
+			});
+		} else {
+			canvasDrawCallbackList.push(findThis);
+		}
 	}
 	render() {
 		var children = React.Children.map(this.props.children, (child) => {
