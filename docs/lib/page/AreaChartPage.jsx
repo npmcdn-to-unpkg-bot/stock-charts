@@ -6,6 +6,7 @@ var Row = require('lib/row');
 var Section = require('lib/section');
 
 import AreaChart from 'lib/charts/AreaChart';
+import AreaChartWithYPercent from 'lib/charts/AreaChartWithYPercent';
 
 var OverviewPage = React.createClass({
 	statics: {
@@ -22,6 +23,11 @@ var OverviewPage = React.createClass({
 				<Row>
 					<Section colSpan={2}>
 						<aside dangerouslySetInnerHTML={{__html: require('md/AREACHART')}}></aside>
+					</Section>
+				</Row>
+				<Row>
+					<Section colSpan={2}>
+						<AreaChartWithYPercent data={this.props.someData} type="svg" />
 					</Section>
 				</Row>
 			</ContentSection>
