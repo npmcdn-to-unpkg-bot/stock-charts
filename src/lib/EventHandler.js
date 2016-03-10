@@ -3,7 +3,7 @@
 import React from "react";
 import PureComponent from "./utils/PureComponent";
 import { getMainChart, getChartDataConfig, getChartData, getDataToPlotForDomain } from "./utils/ChartDataUtil";
-import DummyTransformer from "./transforms";
+import { DummyTransformer } from "./transforms";
 import { isReactVersion13 } from "./utils/utils";
 
 import objectAssign from "object-assign";
@@ -17,14 +17,15 @@ function getLongValue(value) {
 class EventHandler extends PureComponent {
 	constructor(props, context) {
 		super(props, context);
-
+		this.handleMouseEnter = this.handleMouseEnter.bind(this);
 		this.getCanvasContexts = this.getCanvasContexts.bind(this);
 		this.pushCallbackForCanvasDraw = this.pushCallbackForCanvasDraw.bind(this);
 
 		this.canvasDrawCallbackList = [];
 
 		this.state = {
-
+			show: false,
+			mouseXY: [0, 0],
 		};
 
 	}
@@ -134,6 +135,19 @@ class EventHandler extends PureComponent {
 		} else {
 			canvasDrawCallbackList.push(findThis);
 		}
+	}
+	handleMouseEnter() {
+		var { type, canvasContexts } = this.props;
+		var { canvases } = this.state;
+		if (type === "svg") {
+			canvases = null;
+		} else {
+			canvases = canvasContexts();
+		}
+		this.setState({
+			show: true,
+			canvases: canvases,
+		});
 	}
 	render() {
 		var children = React.Children.map(this.props.children, (child) => {

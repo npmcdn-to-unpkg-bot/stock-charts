@@ -1,3 +1,7 @@
-import { DummyTransformer } from "./DummyTransformer";
+import DummyTransformer  from "./DummyTransformer";
+import StockscaleTransformer from "./StockscaleTransformer";
 
-export default DummyTransformer;
+export default {
+	DummyTransformer,
+	StockscaleTransformer,
+};

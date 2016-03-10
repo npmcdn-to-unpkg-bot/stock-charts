@@ -7,6 +7,7 @@ var Section = require('lib/section');
 
 import AreaChart from 'lib/charts/AreaChart';
 import AreaChartWithYPercent from 'lib/charts/AreaChartWithYPercent';
+import AreaChartWithZoomPan from 'lib/charts/AreaChartWithZoomPan';
 
 var OverviewPage = React.createClass({
 	statics: {
@@ -28,6 +29,11 @@ var OverviewPage = React.createClass({
 				<Row>
 					<Section colSpan={2}>
 						<AreaChartWithYPercent data={this.props.someData} type="svg" />
+					</Section>
+				</Row>
+				<Row>
+					<Section colSpan={2}>
+						<AreaChartWithZoomPan data={this.props.someData} type="svg" />
 					</Section>
 				</Row>
 			</ContentSection>

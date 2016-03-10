@@ -1,5 +1,8 @@
 'use strict';
 
+// interaction components
+import EventCapture from "./lib/EventCapture";
+
 // common Components
 import Chart from "./lib/Chart"
 import ChartCanvas from "./lib/ChartCanvas";
@@ -7,7 +10,8 @@ import * as Utils from "./lib/utils/utils";
 import helper from "./lib/helper";
 import axes from "./lib/axes";
 import DataSeries from "./lib/DataSeries";
-import series from "./lib/series"
+import series from "./lib/series";
+import transforms from "./lib/transforms";
 
 const version = "0.0.1";
 
@@ -20,5 +24,7 @@ export default {
 	version,
 	helper,
 	axes,
+	transforms,
+	EventCapture,
 	Utils
 };

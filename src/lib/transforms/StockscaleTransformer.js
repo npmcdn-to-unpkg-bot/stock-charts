@@ -145,7 +145,7 @@ function StockscaleTransformer() {
 
                     row.startOfQuarter = row.startOfMonth && date.getMonth() % 3 === 0;
 
-                    row.startOfYear = date.getYear() !== = prevDate.getYear();
+                    row.startOfYear = date.getYear() !== prevDate.getYear();
                 }
 
                 prevDate = date;
