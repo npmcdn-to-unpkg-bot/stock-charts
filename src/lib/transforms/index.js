@@ -1,7 +1,7 @@
 import DummyTransformer  from "./DummyTransformer";
 import StockscaleTransformer from "./StockscaleTransformer";
 
-export default {
+module.exports = {
 	DummyTransformer,
 	StockscaleTransformer,
 };
