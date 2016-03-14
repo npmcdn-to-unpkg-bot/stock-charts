@@ -2,7 +2,7 @@
 
 import React from "react";
 import PureComponent from "./utils/PureComponent";
-import { getMainChart, getChartDataConfig, getChartData, getDataToPlotForDomain } from "./utils/ChartDataUtil";
+import { getMainChart, getChartDataConfig, getChartData, getDataToPlotForDomain, getCurrentItems } from "./utils/ChartDataUtil";
 import { DummyTransformer } from "./transforms";
 import { isReactVersion13 } from "./utils/utils";
 
@@ -17,9 +17,14 @@ function getLongValue(value) {
 class EventHandler extends PureComponent {
 	constructor(props, context) {
 		super(props, context);
+		/* Event Handlers */
 		this.handleMouseEnter = this.handleMouseEnter.bind(this);
+		this.handleMouseMove = this.handleMouseMove.bind(this);
+
 		this.getCanvasContexts = this.getCanvasContexts.bind(this);
 		this.pushCallbackForCanvasDraw = this.pushCallbackForCanvasDraw.bind(this);
+
+		this.subscriptions = [];
 
 		this.canvasDrawCallbackList = [];
 
@@ -136,6 +141,17 @@ class EventHandler extends PureComponent {
 			canvasDrawCallbackList.push(findThis);
 		}
 	}
+	handleMouseMove(mouseXY, e) {
+		var currentCharts = this.state.chartData.filter((chartData) => {
+			var top = chartData.config.origin[1];
+			var bottom = top + chartData.config.height;
+			return (mouseXY[1] > top && mouseXY[1] < bottom);
+		}).map((chartData) => chartData.id);
+
+		var currentItems = getCurrentItems(this.state.chartData, mouseXY, this.state.plotData);
+
+		var interactiveState = this.trigger
+	}
 	handleMouseEnter() {
 		var { type, canvasContexts } = this.props;
 		var { canvases } = this.state;
@@ -148,6 +164,9 @@ class EventHandler extends PureComponent {
 			show: true,
 			canvases: canvases,
 		});
+	}
+	triggerCallback(eventType, state, interactiveState, event) {
+
 	}
 	render() {
 		var children = React.Children.map(this.props.children, (child) => {

@@ -1,9 +1,25 @@
 import React from 'react';
 
+import { mousePosition } from "./utils/utils";
+
 class EventCapture extends React.Component {
   constructor(props) {
     super(props);
     this.handleEnter = this.handleEnter.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
+  }
+
+  componentWillMount() {
+
+  }
+
+  handleMouseMove(e) {
+  	if (this.context.onMouseMove && this.props.mouseMove) {
+  		if (!this.context.panInProgress) {
+  			var newPos = mousePosition(e);
+  			this.context.onMouseMove(newPos, e);
+  		}
+  	}
   }
 
   handleEnter() {
@@ -19,6 +35,7 @@ class EventCapture extends React.Component {
       		className={className}
       		width={this.context.width} height={this.context.height} style={{ opacity : 0 }}
       		onMouseEnter={this.handleEnter}
+      		onMouseMove={this.handleMouseMove}
       />
     );
   }

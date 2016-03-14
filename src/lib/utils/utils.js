@@ -9,8 +9,18 @@ export function isReactVersion13() {
     var version = React.version.split(".")[1];
     return version === "13";
 };
+
 export function isReactVersion14() {
     return React.version.split(".")[1] === "14";
+};
+
+export function mousePosition(e) {
+    var container = e.currentTarget,
+        rect = container.getBoundingClientRect(),
+        x = e.clientX - rect.left - container.clientLeft,
+        y = e.clientY - rect.top - container.clientTop,
+        xy = [Math.round(x), Math.round(y)];
+    return xy;
 };
 
 export function cloneMe(obj) {

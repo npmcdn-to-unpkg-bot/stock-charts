@@ -53,7 +53,7 @@ function buildWeeklyData(daily, indexMutator, dateAccessor, dateMutator) {
 
         if (d.startOfWeek) {
         	if (prevWeek) {
-        		eachWeek.trueRange(
+        		eachWeek.trueRange = Math.max(
         			eachWeek.high - eachWeek.low
         			, eachWeek.high - prevWeek.close // TODO: Revist Should be absolute value of this.
         			, eachWeek.low - prevWeek.close
@@ -128,7 +128,7 @@ function StockscaleTransformer() {
                         row[key] = each[key];
                     });
 
-                indexMutator(d, i);
+                indexMutator(row, i);
 
                 row.startOfWeek = false;
                 row.startOfMonth = false;
