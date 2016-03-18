@@ -9,6 +9,8 @@ var { ChartCanvas, Chart, DataSeries, EventCapture } = ReStock;
 
 var { AreaSeries } = ReStock.series;
 
+var { MouseCoordinates } = ReStock.coordinates;
+
 var { StockscaleTransformer } = ReStock.transforms;
 var { XAxis, YAxis } = ReStock.axes;
 
@@ -30,6 +32,7 @@ class AreaChartWithEdge extends React.Component {
 						<AreaSeries />
 					</DataSeries>
 				</Chart>
+				<MouseCoordinates xDisplayFormat={d3.time.format("%Y-%m-%d")} />
 				<EventCapture mouseMove={true} zoom={true} pan={true} mainChart={1} defaultFocus={false} />
 			</ChartCanvas>
 		);

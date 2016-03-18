@@ -12,6 +12,7 @@ import axes from "./lib/axes";
 import DataSeries from "./lib/DataSeries";
 import series from "./lib/series";
 import transforms from "./lib/transforms";
+import coordinates from "./lib/coordinates";
 
 const version = "0.0.1";
 
@@ -25,6 +26,7 @@ export default {
 	helper,
 	axes,
 	transforms,
+	coordinates,
 	EventCapture,
 	Utils
 };

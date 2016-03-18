@@ -150,7 +150,27 @@ class EventHandler extends PureComponent {
 
 		var currentItems = getCurrentItems(this.state.chartData, mouseXY, this.state.plotData);
 
-		var interactiveState = this.trigger
+		var interactiveState = this.triggerCallback(
+			"mousemove",
+			objectAssign({}, this.state, { currentItems, currentCharts }),
+			this.state.interactiveState,
+			e);
+
+		var contexts = this.getCanvasContexts();
+
+		if (contexts && contexts.mouseCoord) {
+			this.clearCanvas([contexts.mouseCoord]);
+		}
+		// console.log(interactiveState === this.state.interactiveState);
+		if (interactiveState !== this.state.interactiveState) this.clearInteractiveCanvas();
+
+		this.setState({
+			mouseXY: mouseXY,
+			currentItems: currentItems,
+			show: true,
+			currentCharts,
+			interactiveState,
+		});
 	}
 	handleMouseEnter() {
 		var { type, canvasContexts } = this.props;
@@ -166,7 +186,46 @@ class EventHandler extends PureComponent {
 		});
 	}
 	triggerCallback(eventType, state, interactiveState, event) {
+		var { plotData, mouseXY, currentCharts, chartData, currentItems } = state;
+		var callbackList = this.subscriptions.filter(each => each.eventType === eventType);
+		var delta = callbackList.map(each => {
+			var singleChartData = chartData.filter(eachItem => eachItem.id === each.forChart)[0];
+			var singleCurrentItem = currentItems.filter(eachItem => eachItem.id === each.forChart)[0];
+			return {
+				callback: each.callback,
+				forChart: each.forChart,
+				plotData,
+				mouseXY,
+				currentCharts,
+				currentItem: singleCurrentItem.data,
+				chartData: singleChartData
+			};
+		})
+		.filter(each => each.currentCharts.indexOf(each.forChart) >= -1)
+		.map(each => each.callback({
+			plotData: each.plotData,
+			mouseXY: each.mouseXY,
+			chartData: each.chartData,
+			currentItem: each.currentItem,
+		}, event));
 
+		// console.log(delta.length);
+		if (delta.length === 0) return interactiveState;
+
+		var i = 0, j = 0, added = false;
+		var newInteractiveState = interactiveState.slice(0);
+		for (i = 0; i < delta.length; i++) {
+			var each = delta[i];
+			for (j = 0; j < newInteractiveState.length; j++) {
+				if (each.id === newInteractiveState[j].id) {
+					newInteractiveState[j] = each;
+					added = true;
+				}
+			}
+			if (!added) newInteractiveState.push(each);
+			added = false;
+		}
+		return newInteractiveState;
 	}
 	render() {
 		var children = React.Children.map(this.props.children, (child) => {
