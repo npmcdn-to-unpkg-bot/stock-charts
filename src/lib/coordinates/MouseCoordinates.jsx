@@ -4,6 +4,10 @@ import React from 'react';
 
 import pure from '../pure';
 
+import CrossHair from "./CrossHair";
+
+import { displayDateFormat, displayNumberFormat } from "../utils/utils";
+
 class MouseCoordinates extends React.Component {
 	componentDidMount() {
 		var { chartCanvasType, getCanvasContexts } = this.props;
@@ -26,17 +30,65 @@ class MouseCoordinates extends React.Component {
 	}
 
 	render() {
-	var { chartCanvasType, mouseXY, currentCharts, chartData, currentItems, show } = this.props;
-	var { stroke, opacity, textStroke, textBGFill, textBGopacity, fontFamily, fontSize } = this.props;
+		var { chartCanvasType, mouseXY, currentCharts, chartData, currentItems, show } = this.props;
+		var { stroke, opacity, textStroke, textBGFill, textBGopacity, fontFamily, fontSize } = this.props;
 
-	if (chartCanvasType !== "svg") return null;
+		if (chartCanvasType !== "svg") return null;
 
-	var pointer = MouseCoordinates.helper(this.props, show, mouseXY, currentCharts, chartData, currentItems);
-		return (
-			<div></div>
-		);
+		var pointer = MouseCoordinates.helper(this.props, show, mouseXY, currentCharts, chartData, currentItems);
+
+		if (!pointer) return null;
+
+		return <CrossHair height={pointer.height} width={pointer.width} mouseXY={pointer.mouseXY}
+					xDisplayValue={pointer.xDisplayValue} edges={pointer.edges}
+					stroke={stroke} opacity={opacity} textStroke={textStroke}
+					textBGFill={textBGFill} textBGopacity={textBGopacity}
+					fontFamily={fontFamily} fontSize={fontSize} />;
 	}
 }
+
+MouseCoordinates.propTypes = {
+	xDisplayFormat: React.PropTypes.func.isRequired,
+	yDisplayFormat: React.PropTypes.func.isRequired,
+	type: React.PropTypes.oneOf(["crosshair"]).isRequired,
+
+	chartCanvasType: React.PropTypes.string,
+	getCanvasContexts: React.PropTypes.func,
+	mouseXY: React.PropTypes.array,
+	currentCharts: React.PropTypes.array,
+	chartData: React.PropTypes.array,
+	currentItems: React.PropTypes.array,
+	show: React.PropTypes.bool,
+	stroke: React.PropTypes.string,
+	opacity: React.PropTypes.number,
+	textStroke: React.PropTypes.string,
+	textBGFill: React.PropTypes.string,
+	textBGopacity: React.PropTypes.number,
+	fontFamily: React.PropTypes.string,
+	fontSize: React.PropTypes.number,
+};
+
+MouseCoordinates.defaultProps = {
+	// show: false,
+	snapX: true,
+	type: "crosshair",
+	xDisplayFormat: displayDateFormat,
+	yDisplayFormat: displayNumberFormat,
+	stroke: "#000000",
+	opacity: 0.2,
+	textStroke: "#ffffff",
+	textBGFill: "#8a8a8a",
+	textBGopacity: 1,
+	fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
+	fontSize: 13,
+
+
+	// fill: "",
+	// opacity: 1,
+	// textFill: "white",
+		// var { fill, opacity, fontFamily, fontSize, textFill } = props;
+
+};
 
 MouseCoordinates.helper = (props, show, mouseXY, currentCharts, chartData, currentItems) => {
 	if (!show) return;
@@ -44,8 +96,45 @@ MouseCoordinates.helper = (props, show, mouseXY, currentCharts, chartData, curre
 	var edges = chartData
 		.filter((eachChartData) => currentCharts.indexOf(eachChartData.id) > -1)
 		.map((each) => {
-
+			var yDisplayFormat = each.config.compareSeries.length > 0
+				? (d) => (Math.round(d * 10000) / 100).toFixed(2) + "%"
+				: each.config.mouseCoordinates.format;
+			var mouseY = mouseXY[1] - each.config.origin[1];
+			var yValue = each.plot.scales.yScale.invert(mouseY);
+			return {
+				id: each.id,
+				at: each.config.mouseCoordinates.at,
+				yValue: yValue,
+				yDisplayFormat: yDisplayFormat
+			};
+		})
+		.filter((each) => each.at !== undefined)
+		.filter((each) => each.yDisplayFormat !== undefined)
+		.map(each => {
+			each.yDisplayValue = each.yDisplayFormat(each.yValue);
+			return each;
 		});
+
+	var singleChartData = chartData.filter((eachChartData) => eachChartData.id === mainChart)[0];
+
+	var item = currentItems.filter((eachItem) => eachItem.id === mainChart)[0];
+	if (item === undefined) return null;
+	item = item.data;
+
+	var xValue = singleChartData.config.xAccessor(item);
+
+	var xDisplayValue = dateAccessor === undefined
+		? xValue
+		: dateAccessor(item);
+
+	// var yValue = singleChartData.plot.scales.yScale.invert(mouseXY[1]);
+	if (xValue === undefined) return null;
+	var x = snapX ? Math.round(singleChartData.plot.scales.xScale(xValue)) : mouseXY[0];
+	var y = mouseXY[1];
+	var { stroke, opacity, textStroke, textBGFill, textBGopacity, fontFamily, fontSize } = props;
+
+	return { height, width, mouseXY: [x, y], xDisplayValue: xDisplayFormat(xDisplayValue), edges,
+		stroke, opacity, textStroke, textBGFill, textBGopacity, fontFamily, fontSize };
 };
 
 export default pure(MouseCoordinates, {

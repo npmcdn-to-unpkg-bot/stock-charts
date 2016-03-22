@@ -5,6 +5,16 @@ import d3 from "d3";
 
 export const overlayColors = d3.scale.category10();
 
+export const displayDateFormat = d3.time.format("%Y-%m-%d");
+
+export function displayNumberFormat(x) {
+    return numberWithCommas(x.toFixed(2));
+};
+
+export function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
 export function isReactVersion13() {
     var version = React.version.split(".")[1];
     return version === "13";

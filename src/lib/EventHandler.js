@@ -31,6 +31,7 @@ class EventHandler extends PureComponent {
 		this.state = {
 			show: false,
 			mouseXY: [0, 0],
+			currentItems: [],
 		};
 
 	}
