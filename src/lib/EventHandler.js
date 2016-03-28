@@ -20,6 +20,7 @@ class EventHandler extends PureComponent {
 		/* Event Handlers */
 		this.handleMouseEnter = this.handleMouseEnter.bind(this);
 		this.handleMouseMove = this.handleMouseMove.bind(this);
+		this.handleMouseLeave = this.handleMouseLeave.bind(this);
 
 		this.getCanvasContexts = this.getCanvasContexts.bind(this);
 		this.pushCallbackForCanvasDraw = this.pushCallbackForCanvasDraw.bind(this);
@@ -184,6 +185,17 @@ class EventHandler extends PureComponent {
 		this.setState({
 			show: true,
 			canvases: canvases,
+		});
+	}
+	handleMouseLeave() {
+		var contexts = this.getCanvasContexts();
+
+		if (contexts && contexts.mouseCoord) {
+			this.clearCanvas([contexts.mouseCoord]);
+		}
+
+		this.setState({
+			show: false
 		});
 	}
 	triggerCallback(eventType, state, interactiveState, event) {

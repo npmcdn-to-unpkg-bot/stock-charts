@@ -1,6 +1,10 @@
 import React from 'react';
+import EdgeCoordinate from "./EdgeCoordinate";
 
 class CrossHair extends React.Component {
+	shouldComponentUpdate(nextProps) {
+		return nextProps.mouseXY !== this.props.mouseXY;
+	}
 
 	render() {
 		var result = CrossHair.helper(this.props);
@@ -15,10 +19,24 @@ class CrossHair extends React.Component {
 		return (
 			<g className="crosshair">
 				{svgLine}
+				{edges.map((edge, idx) => <EdgeCoordinate
+					key={idx}
+					className="horizontal"
+					{ ...edge }
+					/>)}
 			</g>
 		);
 	}
 }
+
+CrossHair.propTypes = {
+	yAxisPad: React.PropTypes.number.isRequired,
+	height: React.PropTypes.number.isRequired,
+	width: React.PropTypes.number.isRequired,
+	mouseXY: React.PropTypes.array.isRequired,
+	xDisplayValue: React.PropTypes.string.isRequired,
+	edges: React.PropTypes.array.isRequired
+};
 
 CrossHair.defaultProps = {
 	namespace: "ReStock.CrossHair",
@@ -26,8 +44,8 @@ CrossHair.defaultProps = {
 };
 
 CrossHair.helper = (props) => {
-	var { width, edges, yAxisPad, mouseXY } = props;
-	var { stroke, opacity } = props;
+	var { width, edges, yAxisPad, mouseXY, xDisplayValue, height } = props;
+	var { stroke, opacity, textStroke, textBGFill, textBGopacity, fontFamily, fontSize } = props;
 	var x1 = 0, x2 = width;
 
 	var edges = edges.map((edge) => {
@@ -39,13 +57,40 @@ CrossHair.helper = (props) => {
 		}
 
 		return {
-			type: "horizontal"
+			type: "horizontal",
 			show: true,
+			x1: 0,
+			y1: mouseXY[1],
+			x2: 0,
+			y2: mouseXY[1],
+			coordinate: edge.yDisplayValue,
+			edgeAt: (edge.at === "left" ? x1 : x2),
+			orient: edge.at,
+			hideLine: true,
+			lineStroke: stroke,
+			lineOpacity: opacity,
+			textFill: textStroke,
+			fill: textBGFill,
+			opacity: textBGopacity,
+			fontFamily, fontSize
 		};
 	});
-
 	edges.push({
-		type: "vertical"
+		type: "vertical",
+		show: true,
+		x1: mouseXY[0],
+		y1: 0,
+		x2: mouseXY[0],
+		y2: height,
+		coordinate: xDisplayValue,
+		edgeAt: height,
+		orient: "bottom",
+		lineStroke: stroke,
+		lineOpacity: opacity,
+		textFill: textStroke,
+		fill: textBGFill,
+		opacity: textBGopacity,
+		fontFamily, fontSize
 	});
 
 	var line;

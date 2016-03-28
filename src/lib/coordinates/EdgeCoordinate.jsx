@@ -2,11 +2,72 @@ import React from 'react';
 
 class EdgeCoordinate extends React.Component {
 	render() {
+		var { className } = this.props;
+
+		var edge = EdgeCoordinate.helper(this.props);
+		if (edge === null) return null;
+		var line, coordinateBase, coordinate;
+
+		if (edge.line !== undefined) {
+			line = <line
+				className="react-stockcharts-cross-hair" opacity={edge.line.opacity} stroke={edge.line.stroke}
+				x1={edge.line.x1} y1={edge.line.y1}
+				x2={edge.line.x2} y2={edge.line.y2} />;
+		}
+		if (edge.coordinateBase !== undefined) {
+			coordinateBase = <rect key={1} className="react-stockchart-text-background"
+				x={edge.coordinateBase.edgeXRect}
+				y={edge.coordinateBase.edgeYRect}
+				height={edge.coordinateBase.rectHeight} width={edge.coordinateBase.rectWidth}
+				fill={edge.coordinateBase.fill}  opacity={edge.coordinateBase.opacity} />;
+
+			coordinate = (<text key={2} x={edge.coordinate.edgeXText}
+				y={edge.coordinate.edgeYText}
+				textAnchor={edge.coordinate.textAnchor}
+				fontFamily={edge.coordinate.fontFamily}
+				fontSize={edge.coordinate.fontSize}
+				dy=".32em" fill={edge.coordinate.textFill} >{edge.coordinate.displayCoordinate}</text>);
+		}
 		return (
-			<div></div>
+			<g className={className}>
+				{line}
+				{coordinateBase}
+				{coordinate}
+			</g>
 		);
 	}
 }
+
+EdgeCoordinate.propTypes = {
+	className: React.PropTypes.string,
+	type: React.PropTypes.oneOf(["vertical", "horizontal"]).isRequired,
+	coordinate: React.PropTypes.any.isRequired,
+	x1: React.PropTypes.number.isRequired,
+	y1: React.PropTypes.number.isRequired,
+	x2: React.PropTypes.number.isRequired,
+	y2: React.PropTypes.number.isRequired,
+	orient: React.PropTypes.oneOf(["bottom", "top", "left", "right"]),
+	rectWidth: React.PropTypes.number,
+	hideLine: React.PropTypes.bool,
+	fill: React.PropTypes.string,
+	opacity: React.PropTypes.number,
+	fontFamily: React.PropTypes.string.isRequired,
+	fontSize: React.PropTypes.number.isRequired,
+};
+
+EdgeCoordinate.defaultProps = {
+	namespace: "ReStock.EdgeCoordinate",
+	className: "react-stockcharts-edgecoordinate",
+	orient: "left",
+	hideLine: false,
+	fill: "#8a8a8a",
+	opacity: 1,
+	textFill: "#FFFFFF",
+	fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif",
+	fontSize: 13,
+	lineStroke: "#000000",
+	lineOpacity: 0.3,
+};
 
 EdgeCoordinate.helper = (props) => {
 	var { coordinate: displayCoordinate, show, rectWidth, type, orient, edgeAt, hideLine } = props;
@@ -19,5 +80,34 @@ EdgeCoordinate.helper = (props) => {
 
 	var edgeXRect, edgeYRect, edgeXText, edgeYText;
 
-	if (type === "horizontal") {}
+	if (type === "horizontal") {
+
+		edgeXRect = (orient === "right") ? edgeAt + 1 : edgeAt - rectWidth - 1;
+		edgeYRect = y1 - (rectHeight / 2);
+		edgeXText = (orient === "right") ? edgeAt + (rectWidth / 2) : edgeAt - (rectWidth / 2);
+		edgeYText = y1;
+	} else {
+		edgeXRect = x1 - (rectWidth / 2);
+		edgeYRect = (orient === "bottom") ? edgeAt : edgeAt - rectHeight;
+		edgeXText = x1;
+		edgeYText = (orient === "bottom") ? edgeAt + (rectHeight / 2) : edgeAt - (rectHeight / 2);
+	}
+
+	var coordinateBase, coordinate, textAnchor = "middle";
+	if (displayCoordinate !== undefined) {
+		coordinateBase = {
+			edgeXRect, edgeYRect, rectHeight, rectWidth, fill, opacity
+		};
+		coordinate = {
+			edgeXText, edgeYText, textAnchor, fontFamily, fontSize, textFill, displayCoordinate
+		};
+	}
+	var line = hideLine ? undefined : {
+		opacity: lineOpacity, stroke: lineStroke, x1, y1, x2, y2
+	};
+	return {
+		coordinateBase, coordinate, line
+	};
 };
+
+export default EdgeCoordinate;

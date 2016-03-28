@@ -7,6 +7,7 @@ class EventCapture extends React.Component {
     super(props);
     this.handleEnter = this.handleEnter.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleLeave = this.handleLeave.bind(this);
   }
 
   componentWillMount() {
@@ -22,6 +23,12 @@ class EventCapture extends React.Component {
   	}
   }
 
+  handleLeave() {
+    if (this.context.onMouseLeave) {
+        this.context.onMouseLeave();
+    }
+  }
+
   handleEnter() {
   	if (this.context.onMouseEnter) {
   		this.context.onMouseEnter();
@@ -35,6 +42,7 @@ class EventCapture extends React.Component {
       		className={className}
       		width={this.context.width} height={this.context.height} style={{ opacity : 0 }}
       		onMouseEnter={this.handleEnter}
+            onMouseLeave={this.handleLeave}
       		onMouseMove={this.handleMouseMove}
       />
     );
