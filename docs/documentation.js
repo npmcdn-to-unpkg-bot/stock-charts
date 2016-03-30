@@ -17,6 +17,7 @@ var MenuItem = require("lib/MenuItem");
 var pages = [
 	require("lib/page/GettingStartedPage"),
 	require("lib/page/AreaChartPage"),
+	require("lib/page/CandleStickChartPage"),
 ];
 
 function compressString(string) {

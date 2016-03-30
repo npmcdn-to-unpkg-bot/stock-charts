@@ -23,13 +23,13 @@ module.exports = {
 			},
 			{
 				test: /\.(js|jsx)$/,
-				loader: "babel",
-				exclude: /node_modules/,
-				query:
+				loaders: ["babel"],
+				exclude: /node_modules/
+				/*query:
 				{
 					cacheDirectory: true,
 					presets: ['es2015', 'react']
-				}
+				}*/
 			}
 		]
 	},

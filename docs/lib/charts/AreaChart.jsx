@@ -15,7 +15,10 @@ class AreaChart extends React.Component {
 		return (
 			<ChartCanvas width={width} height={400}
 				margin={{left: 50, right: 50, top:10, bottom: 30}}
-				data={data} type={type}>
+				seriesName="MSFT"
+				data={data} type={type}
+				xAccessor={d => d.date} xScale={d3.time.scale()}
+				xExtents={[new Date(2011, 0, 1), new Date(2013, 0, 2)]}>
 				<Chart id={0} xAccessor={(d) => d.date}>
 					<XAxis axisAt="bottom" orient="bottom" ticks={6}/>
 					<YAxis axisAt="left" orient="left" />

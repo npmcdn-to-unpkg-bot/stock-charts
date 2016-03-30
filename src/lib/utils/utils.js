@@ -24,6 +24,14 @@ export function isReactVersion14() {
     return React.version.split(".")[1] === "14";
 };
 
+export function isDefined(d) {
+    return d !== null && typeof d !== 'undefined';
+};
+
+export function isNotDefined(d) {
+    return !isDefined(d);
+};
+
 export function mousePosition(e) {
     var container = e.currentTarget,
         rect = container.getBoundingClientRect(),

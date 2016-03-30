@@ -1,33 +1,71 @@
 "use strict";
 
-import React from "react";
-import objectAssign from "object-assign";
+import React, { PropTypes, Component } from "react";
+import { identity, isDefined, isNotDefined } from "./utils";
+
+import eodIntervalCalculator from "./scale/eodIntervalCalculator";
 
 import EventHandler from "./EventHandler";
 import CanvasContainer from "./CanvasContainer";
 
+import evaluator from "./scale/evaluator";
 
-class ChartCanvas extends React.Component {
+function calculateFullData(props) {
+	var { data, calculator } = props;
+	var { xScale, intervalCalculator, allowedIntervals, plotFull } = props;
+	var { xAccessor, map, dataEvaluator, indexAccessor, indexMutator, discontinous } = props;
+
+	var wholeData = isDefined(plotFull) ? plotFull : xAccessor === identity;
+
+	var evaluate = dataEvaluator()
+		.allowedIntervals(allowedIntervals)
+		.intervalCalculator(intervalCalculator)
+		.xAccessor(xAccessor)
+		.discontinous(discontinous)
+		.indexAccessor(indexAccessor)
+		.indexMutator(indexMutator)
+		.map(map)
+		.useWholeData(wholeData)
+		.scale(xScale)
+		.calculator(calculator.slice());
+
+		evaluate(data);
+}
+
+function calculateState(props) {
+	var { data, interval, allowedIntervals } = props;
+	var { xAccessor: inputXAccesor, xExtents: xExtentsProp, xScale } = props;
+
+	if (isDefined(interval)
+		&& (isNotDefined(allowedIntervals)
+			|| allowedIntervals.indexOf(interval) > -1)) throw new Error("interval has to be part of allowedInterval");
+
+	calculateFullData(props);
+
+
+}
+
+class ChartCanvas extends Component {
 	constructor() {
 		super();
 		this.getCanvases = this.getCanvases.bind(this);
+		this.getDataInfo = this.getDataInfo.bind(this);
 	}
-	getDimensions(props) {
-		return {
-			height: props.height - props.margin.top - props.margin.bottom,
-			width: props.width - props.margin.left - props.margin.right,
-		};
-	}
-	pushData(array) {
-		this.refs.chartContainer.pushData(array);
-	}
-	alterData(array) {
-		this.refs.chartContainer.alterData(array);
+	getDataInfo() {
+		return this.refs.chartContainer.getDataInfo();
 	}
 	getCanvases() {
 		if ( this.refs && this.refs.canvases ) {
 			return this.refs.canvases.getCanvasContexts();
 		}
+	}
+	getChildContext() {
+		return {
+			displayXAccessor: this.props.xAccessor,
+		};
+	}
+	componentWillMount() {
+		this.setState(calculateState(this.props));
 	}
 	render() {
 		var dimensions = this.getDimensions(this.props);
@@ -88,9 +126,12 @@ ChartCanvas.propTypes = {
 
 ChartCanvas.defaultProps = {
 	margin: {top: 20, right: 30, bottom: 30, left: 80},
-	interval: "D",
 	type: "hybrid",
-	/*defaultDataTransform: [ { transform: DummyTransformer } ],*/
+	calculator: [],
+	dataEvaluator: evaluator,
+	intervalCalculator: eodIntervalCalculator,
+	xAccessor: identity,
+	map: identity,
 	dataTransform: [ ],
 	className: "react-stockchart",
 	zIndex: 1,

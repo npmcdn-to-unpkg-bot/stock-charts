@@ -6,7 +6,7 @@ import EventCapture from "./lib/EventCapture";
 // common Components
 import Chart from "./lib/Chart"
 import ChartCanvas from "./lib/ChartCanvas";
-import * as Utils from "./lib/utils/utils";
+import * as Utils from "./lib/utils";
 import helper from "./lib/helper";
 import axes from "./lib/axes";
 import DataSeries from "./lib/DataSeries";
