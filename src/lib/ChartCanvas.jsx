@@ -1,14 +1,36 @@
 "use strict";
 
 import React, { PropTypes, Component } from "react";
-import { identity, isDefined, isNotDefined } from "./utils";
+import d3 from "d3";
 
-import eodIntervalCalculator from "./scale/eodIntervalCalculator";
+import { shouldShowCrossHairStyle } from "./utils/ChartDataUtil";
+import { shallowEqual, last, identity, isDefined, isNotDefined } from "./utils";
+
 
 import EventHandler from "./EventHandler";
 import CanvasContainer from "./CanvasContainer";
 
+import eodIntervalCalculator from "./scale/eodIntervalCalculator";
 import evaluator from "./scale/evaluator";
+
+function shouldResetChart(thisProps, nextProps) {
+	var candidates = ["seriesName", /* "data",*/"interval", "discontinous",
+		"intervalCalculator", "allowedIntervals",
+		"xScale", /* "xAccessor",*/"map", "dataEvaluator",
+		"indexAccessor", "indexMutator"];
+	return !candidates.every(key => {
+		var result = shallowEqual(thisProps[key], nextProps[key]);
+		// console.log(key, result);
+		return result;
+	});
+}
+
+function getDimensions(props) {
+	return {
+		height: props.height - props.margin.top - props.margin.bottom,
+		width: props.width - props.margin.left - props.margin.right,
+	};
+}
 
 function calculateFullData(props) {
 	var { data, calculator } = props;
@@ -29,7 +51,13 @@ function calculateFullData(props) {
 		.scale(xScale)
 		.calculator(calculator.slice());
 
-		evaluate(data);
+	var { xAccessor, domainCalculator: xExtentsCalculator, fullData } = evaluate(data);
+
+	return {
+		xAccessor,
+		xExtentsCalculator,
+		fullData,
+	};
 }
 
 function calculateState(props) {
@@ -40,9 +68,49 @@ function calculateState(props) {
 		&& (isNotDefined(allowedIntervals)
 			|| allowedIntervals.indexOf(interval) > -1)) throw new Error("interval has to be part of allowedInterval");
 
-	calculateFullData(props);
+	var { xAccessor, xExtentsCalculator, fullData } = calculateFullData(props);
 
+	var dimensions = getDimensions(props);
 
+	var extent = typeof xExtentsProp === "function"
+		? xExtentsProp(fullData)
+		: d3.extent(xExtentsProp.map(d3.functor).map(each => each(data, inputXAccesor)));
+
+	var { plotData, interval: showingInterval, scale: updatedScale } = xExtentsCalculator
+			.width(dimensions.width)
+			.scale(xScale)
+			.data(fullData)
+			.interval(interval)(extent, inputXAccesor);
+
+	return {
+		fullData,
+		plotData,
+		showingInterval,
+		xExtentsCalculator,
+		xScale: updatedScale,
+		xAccessor,
+		dataAltered: false,
+	};
+}
+
+function getCursorStyle(children) {
+	var style = `<![CDATA[
+			.react-stockcharts-grabbing-cursor {
+				cursor: grabbing;
+				cursor: -moz-grabbing;
+				cursor: -webkit-grabbing;
+			}
+			.react-stockcharts-crosshair-cursor {
+				cursor: crosshair;
+			}
+			.react-stockcharts-toottip-hover {
+				pointer-events: all;
+				cursor: pointer;
+			}
+		]]>`;
+	return shouldShowCrossHairStyle(children)
+		? (<style type="text/css" dangerouslySetInnerHTML={{ __html: style }}></style>)
+		: null;
 }
 
 class ChartCanvas extends Component {
@@ -67,31 +135,24 @@ class ChartCanvas extends Component {
 	componentWillMount() {
 		this.setState(calculateState(this.props));
 	}
+	componentWillReceiveProps(nextProps) {
+		var reset = shouldResetChart(this.props, nextProps);
+	}
 	render() {
-		var dimensions = this.getDimensions(this.props);
-		var style = `<![CDATA[
-						.react-stockcharts-grabbing-cursor {
-							cursor: grabbing;
-							cursor: -moz-grabbing;
-							cursor: -webkit-grabbing;
-						}
-						.react-stockcharts-crosshair-cursor {
-							cursor: crosshair;
-						}
-						.react-stockcharts-toottip-hover {
-							pointer-events: all;
-							cursor: pointer;
-						}
-					]]>`;
-		var { data, dataTransform, interval, initialDisplay, type, height, width, margin, className, clip, zIndex } = this.props;
+		var cursor = getCursorStyle(this.props.children);
 
+		var { interval, data, type, height, width, margin, className, zIndex, postCalculator, flipXScale } = this.props;
+		var { padding } = this.props;
+		var { fullData, plotData, showingInterval, xExtentsCalculator, xScale, xAccessor, dataAltered } = this.state;
+
+		var dimensions = getDimensions(this.props);
+		var props = { padding, interval, type, margin, postCalculator };
+		var stateProps = { fullData, plotData, showingInterval, xExtentsCalculator, xScale, xAccessor, dataAltered };
 		return (
 			<div style={{position: "relative", height: height, width: width}} className={className} >
-				<CanvasContainer ref="canvases" width={width} height={height} type={this.props.type} zIndex={zIndex}/>
-				<svg width={width} height={height} style={{ position: "absolute", zIndex: (zIndex + 5) }}>
-					<style type="text/css" dangerouslySetInnerHTML={{ __html: style }}>
-					</style>
-
+				<CanvasContainer ref="canvases" width={width} height={height} type={type} zIndex={zIndex}/>
+				<svg className={className} width={width} height={height} style={{ position: "absolute", zIndex: (zIndex + 5) }}>
+					{cursor}
 					<defs>
 						<clipPath id="chart-area-clip">
 							<rect x="0" y="0" width={dimensions.width} height={dimensions.height} />
@@ -99,10 +160,13 @@ class ChartCanvas extends Component {
 					</defs>
 					<g transform={`translate(${margin.left + 0.5}, ${margin.top + 0.5})`}>
 						<EventHandler ref="chartContainer"
-								rawData={data} dataTransform={dataTransform} interval={interval}
-								initialDisplay={initialDisplay}
-								dimensions={dimensions} type={type} margin={margin} canvasContexts={this.getCanvases}>
-								{this.props.children}
+							{...props}
+							{...stateProps}
+							direction={flipXScale ? -1 : 1}
+							lastItem={last(data)}
+							dimensions={dimensions}
+							canvasContexts={this.getCanvases}>
+							{this.props.children}
 						</EventHandler>
 					</g>
 				</svg>
@@ -112,31 +176,60 @@ class ChartCanvas extends Component {
 }
 
 ChartCanvas.propTypes = {
-	width: React.PropTypes.number.isRequired,
-	height: React.PropTypes.number.isRequired,
-	margin: React.PropTypes.object,
-	interval: React.PropTypes.oneOf(["D", "W", "M"]).isRequired, // ,"m1", "m5", "m15", "W", "M"
-	type: React.PropTypes.oneOf(["svg", "hybrid"]).isRequired,
-	data: React.PropTypes.array.isRequired,
-	initialDisplay: React.PropTypes.number,
-	dataTransform: React.PropTypes.array.isRequired,
-	className: React.PropTypes.string,
-	zIndex: React.PropTypes.number,
+	width: PropTypes.number.isRequired,
+	height: PropTypes.number.isRequired,
+	margin: PropTypes.object,
+	interval: PropTypes.oneOf(["D", "W", "M"]), // ,"m1", "m5", "m15", "W", "M"
+	type: PropTypes.oneOf(["svg", "hybrid"]).isRequired,
+	data: PropTypes.array.isRequired,
+	initialDisplay: PropTypes.number,
+	calculator: PropTypes.arrayOf(PropTypes.func).isRequired,
+	xAccessor: PropTypes.func,
+	xExtents: PropTypes.oneOfType([
+		PropTypes.array,
+		PropTypes.func
+	]).isRequired,
+	xScale: PropTypes.func.isRequired,
+	className: PropTypes.string,
+	seriesName: PropTypes.string.isRequired,
+	zIndex: PropTypes.number,
+	children: PropTypes.node.isRequired,
+	discontinous: PropTypes.bool.isRequired,
+	postCalculator: PropTypes.func.isRequired,
+	flipXScale: PropTypes.bool.isRequired,
+	padding: PropTypes.oneOfType([
+		PropTypes.number,
+		PropTypes.shape({
+			left: PropTypes.number,
+			right: PropTypes.number,
+		})
+	]).isRequired,
 };
 
 ChartCanvas.defaultProps = {
-	margin: {top: 20, right: 30, bottom: 30, left: 80},
+	margin: { top: 20, right: 30, bottom: 30, left: 80 },
+	indexAccessor: d => d.idx,
+	indexMutator: (d, idx) => d.idx = idx,
+	map: identity,
 	type: "hybrid",
 	calculator: [],
-	dataEvaluator: evaluator,
-	intervalCalculator: eodIntervalCalculator,
-	xAccessor: identity,
-	map: identity,
-	dataTransform: [ ],
 	className: "react-stockchart",
 	zIndex: 1,
-	// clip: true,
+	xExtents: [d3.min, d3.max],
+	intervalCalculator: eodIntervalCalculator,
+	dataEvaluator: evaluator,
+	discontinous: false,
+	postCalculator: identity,
+	padding: 0,
+	xAccessor: identity,
+	flipXScale: false,
 	// initialDisplay: 30
 };
+
+ChartCanvas.childContextTypes = {
+	displayXAccessor: PropTypes.func,
+};
+
+ChartCanvas.ohlcv = d => ({ date: d.date, open: d.open, high: d.high, low: d.low, close: d.close, volume: d.volume });
 
 export default ChartCanvas;

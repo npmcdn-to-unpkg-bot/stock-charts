@@ -1,8 +1,8 @@
 "use strict";
 
-import React from "react";
+import React, { PropTypes, Component } from "react";
 import PureComponent from "./utils/PureComponent";
-import { getMainChart, getChartDataConfig, getChartData, getDataToPlotForDomain, getCurrentItems } from "./utils/ChartDataUtil";
+import { getNewChartConfig, getChartConfigWithUpdatedYScales, getCurrentItems } from "./utils/ChartDataUtil";
 import { DummyTransformer } from "./transforms";
 import { isReactVersion13 } from "./utils/utils";
 
@@ -52,29 +52,13 @@ class EventHandler extends PureComponent {
 		};
 	}
 	componentWillMount() {
-		var { props } = this;
-		var { initialDisplay, rawData, defaultDataTransform, dataTransform, interval, dimensions } = props;
 
-		var transformedData = this.getTransformedData(rawData, defaultDataTransform, dataTransform, interval);
+		var { plotData, showingInterval, direction } = this.props;
+		var { xScale, dimensions, children, postCalculator, padding } = this.props;
 
-		var { data, options } = transformedData;
+		plotData = postCalculator(plotData);
 
-		var dataForInterval = data[interval];
-
-		var mainChart = getMainChart(props.children);
-		var beginIndex = Math.max(dataForInterval.length - initialDisplay, 0);
-		var plotData = dataForInterval.slice(beginIndex); // Main Data After the beginIndex.
-		var chartConfig = getChartDataConfig(props, dimensions, options);
-
-		var chart = chartConfig.filter((eachChart) => eachChart.id ===mainChart)[0];
-
-		var domainL = getLongValue(chart.config.xAccessor(plotData[0]));
-		var domainR = getLongValue(chart.config.xAccessor(plotData[plotData.length - 1]));
-
-		var dataToPlot = getDataToPlotForDomain(domainL, domainR, data, chart.config.width, chart.config.xAccessor);
-		var updatePlotData = dataToPlot.data;
-
-		var chartData = getChartData(props, dimensions, plotData, data, options);
+		var chartConfig = getChartConfigWithUpdatedYScales(getNewChartConfig(dimensions, children), plotData);
 
 		this.setState({
 			data: data,

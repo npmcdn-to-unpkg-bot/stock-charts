@@ -1,12 +1,37 @@
 "use strict";
 
 import {
+	first,
+	last,
+	getClosestItemIndexes,
 	isDefined,
 	isNotDefined,
 	isArray,
 } from "../utils";
 
 import eodIntervalCalculator from "./eodIntervalCalculator";
+
+function getFilteredResponse(dataForInterval, left, right, xAccessor) {
+	var newLeftIndex = getClosestItemIndexes(dataForInterval, left, xAccessor).right;
+	var newRightIndex = getClosestItemIndexes(dataForInterval, right, xAccessor).left;
+
+	var filteredData = dataForInterval.slice(newLeftIndex, newRightIndex + 1);
+
+	return filteredData;
+}
+
+function getDomain(inputDomain, width, filteredData, predicate, currentDomain, canShowTheseMany, realXAccessor) {
+	if (canShowTheseMany(width, filteredData.length)) {
+		var domain = predicate
+			? inputDomain
+			: [realXAccessor(first(filteredData)), realXAccessor(last(filteredData))]; // TODO fix me later
+		return domain;
+	}
+	if (process.env.NODE_ENV !== "production") {
+		console.error(`Trying to show ${filteredData.length} items in a width of ${width}px. This is either too much or too few points`);
+	}
+	return currentDomain;
+}
 
 function extentsWrapper(inputXAccessor, realXAccessor, allowedIntervals, canShowTheseMany, useWholeData = false) {
 	var data, inputXAccessor, interval, width, currentInterval, currentDomain, currentPlotData, scale;
@@ -23,13 +48,75 @@ function extentsWrapper(inputXAccessor, realXAccessor, allowedIntervals, canShow
 			let dataForCurrentInterval = data[currentInterval || allowedIntervals[0]];
 
 			/*var leftIndex = getClosestItemIndexe*/
+		} else if (isDefined(interval) && allowedIntervals.indexOf(interval) > -1) {
+
+		} else if (isNotDefined(interval) && isNotDefined(allowedIntervals)) {
+			let filteredData = getFilteredResponse(data, left, right, xAccessor);
+			domain = getDomain(inputDomain, width, filteredData,
+					realXAccessor === xAccessor, currentDomain,
+					canShowTheseMany, realXAccessor);
+			if (domain !== currentDomain) {
+				plotData = filteredData;
+				intervalToShow = interval;
+			}
+			if (isNotDefined(plotData) && showMax(width) < data[interval].length) {
+				plotData = data[interval].slice(data[interval].length - showMax(width));
+				domain = [realXAccessor(first(plotData)), realXAccessor(last(plotData))];
+			}
 		}
+		var updatedScale = (scale.isPolyLinear && scale.isPolyLinear() && scale.data)
+			? scale.copy().data(plotData)
+			: scale.copy();
+
+		updatedScale.domain(domain);
+		return { plotData, interval: intervalToShow, scale: updatedScale };
 	}
+	domain.data = function(x) {
+		if (!arguments.length) return data;
+		data = x;
+		return domain;
+	};
+	domain.interval = function(x) {
+		if (!arguments.length) return interval;
+		interval = x;
+		return domain;
+	};
+	domain.width = function(x) {
+		if (!arguments.length) return width;
+		width = x;
+		return domain;
+	};
+	domain.currentInterval = function(x) {
+		if (!arguments.length) return currentInterval;
+		currentInterval = x;
+		return domain;
+	};
+	domain.currentDomain = function(x) {
+		if (!arguments.length) return currentDomain;
+		currentDomain = x;
+		return domain;
+	};
+	domain.currentPlotData = function(x) {
+		if (!arguments.length) return currentPlotData;
+		currentPlotData = x;
+		return domain;
+	};
+	domain.scale = function(x) {
+		if (!arguments.length) return scale;
+		scale = x;
+		return domain;
+	};
 	return domain;
 }
 
-function canShowTheseManyPeriods() {
+function canShowTheseManyPeriods(width, arrayLength) {
+	var threshold = 0.75; // number of datapoints per 1px
+	return arrayLength < width * threshold && arrayLength > 1;
+}
 
+function showMax(width) {
+	var threshold = 0.75; // number of datapoints per 1 px
+	return Math.floor(width * threshold);
 }
 
 export default function() {

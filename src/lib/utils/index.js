@@ -4,11 +4,15 @@ import d3 from "d3";
 import identity from "./identity";
 import slidingWindow from "./slidingWindow";
 import accumulatingWindow from "./accumulatingWindow";
+import shallowEqual from "./shallowEqual";
+import zipper from "./zipper";
 
 export {
     identity,
     slidingWindow,
     accumulatingWindow,
+    shallowEqual,
+    zipper,
 };
 
 export const overlayColors = d3.scale.category10();

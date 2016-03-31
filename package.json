@@ -63,6 +63,7 @@
   "dependencies": {
     "babel-cli": "^6.5.1",
     "d3": "^3.5.10",
+    "lodash.flattendeep": "^4.1.1",
     "object-assign": "^4.0.1",
     "react": "^0.14.3",
     "react-dom": "^0.14.3"

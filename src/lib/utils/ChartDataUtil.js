@@ -2,24 +2,104 @@
 
 import React from "react";
 import d3 from "d3";
+import flattenDeep from "lodash.flattendeep";
+
+import Chart from "../Chart";
+import EventCapture from "../EventCapture";
+
 import {
-    getClosestItem, getClosestItemIndexes, overlayColors, pluck, keysAsArray
+    isObject,
+    isDefined,
+    zipper,
 }
-from "./utils";
+from "./index";
+
 import {
     firstDefined, lastDefined
 }
 from "./OverlayUtils"
 import ScaleUtils from "../utils/ScaleUtils";
 
+export function getDimensions({ width, height }, chartProps) {
 
+    var chartWidth = (chartProps.width || width);
+    var chartHeight = (chartProps.height || height);
 
-export function containsChart(props) {
-    return getCharts(props).length > 0;
+    return {
+        availableWidth: width,
+        availableHeight: height,
+        width: chartWidth,
+        height: chartHeight
+    };
 };
 
-export function getCharts(props) {
-    return getChildren(props.children, /Chart$/);
+function values(func) {
+    return (d) => {
+        var obj = func(d);
+        return isObject(obj) ? Object.keys(obj).map(key => obj[key]) : obj;
+    };
+};
+
+export function shouldShowCrossHairStyle(children) {
+    return React.Children.map(children, (each) => {
+        if (each.type === EventCapture) {
+            return each.props.useCrossHairStyle;
+        }
+        return undefined;
+    }).filter(isDefined)[0];
+}
+
+export function getNewChartConfig(innerDimension, children) {
+    return React.Children.map(children, (each) => {
+        if (each.type === Chart) {
+            var { id, origin, padding, yExtents: yExtentsProp, yScale, flipYScale } = each.props;
+            var { width, height, availableWidth, availableHeight } = getDimensions(innerDimension, each.props);
+            var { yMousePointerDisplayLocation: at, yMousePointerDisplayFormat: yDisplayFormat } = each.props;
+            var { yMousePointerRectWidth: rectWidth, yMousePointerRectHeight: rectHeight } = each.props;
+            var mouseCoordinates = { at, yDisplayFormat, rectHeight, rectWidth };
+            var yExtents = (Array.isArray(yExtentsProp) ? yExtentsProp : [yExtentsProp]).map(d3.functor);
+            // console.log(yExtentsProp, yExtents);
+            return {
+                id,
+                origin: d3.functor(origin)(availableWidth, availableHeight),
+                padding,
+                yExtents,
+                flipYScale,
+                yScale,
+                mouseCoordinates,
+                width,
+                height
+            };
+        }
+        return undefined;
+    }).filter(each => isDefined(each));
+}
+
+export function getChartConfigWithUpdatedYScales(chartConfig, plotData) {
+
+    var yDomains = chartConfig
+            .map(({ yExtents, yScale }) => {
+                var yValues = yExtents.map(eachExtent =>
+                    plotData.map(values(eachExtent)));
+                yValues = flattenDeep(yValues);
+
+                var yDomains = (yScale.invert)
+                    ? d3.extent(yValues)
+                    : d3.set(yValues).values();
+
+                return yDomains;
+            });
+
+    var combine = zipper()
+        .combine((config, domain) => {
+            var { padding, height, yScale, flipYScale } = config;
+
+            return { ...config, yScale: setRange(yScale.copy().domain(domain), height, padding, flipYScale) };
+            // return { ...config, yScale: yScale.copy().domain(domain).range([height - padding, padding]) };
+        });
+
+    var updatedChartConfig = combine(chartConfig, yDomains);
+    return updatedChartConfig;
 };
 
 export function getChartDataConfig(props, innerDimensions, other) {
@@ -154,20 +234,6 @@ export function getDataToPlotForDomain(domainL, domainR, data, width, xAccessor)
     };
 };
 
-export function getDimensions(innerDimension, chartProps) {
-    var availableWidth = innerDimension.width;
-    var availableHeight = innerDimension.height;
-
-    var fullWidth = (chartProps.width || availableWidth);
-    var fullHeight = (chartProps.height || availableHeight);
-
-    return {
-        availableWidth: availableWidth,
-        availableHeight: availableHeight,
-        width: fullWidth,
-        height: fullHeight
-    };
-};
 
 export function getXAccessor(props, passThroughProps) {
     var xAccessor = passThroughProps !== undefined && passThroughProps.xAccessor || props.xAccessor !== undefined && props.xAccessor;
