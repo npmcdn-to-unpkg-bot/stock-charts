@@ -1,12 +1,12 @@
 "use strict";
 
-import React from "react";
+import React, { PropTypes, Component } from "react";
 import d3 from "d3";
 
 import wrap from "./wrap";
-import { hexToRGBA } from "../utils/utils";
+import { hexToRGBA, isDefined, first } from "../utils";
 
-class Area extends React.Component {
+class Area extends Component {
 	render() {
 		var { props } = this;
 		var { stroke, fill, className, opacity } = props;

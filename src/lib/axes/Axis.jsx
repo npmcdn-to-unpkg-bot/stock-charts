@@ -1,11 +1,11 @@
 "use strict";
 
-import React from "react";
+import React, { PropTypes, Component } from "react";
 
 import AxisTicks from "./AxisTicks";
 import AxisLine from "./AxisLine";
 
-class Axis extends React.Component {
+class Axis extends Component {
 	constructor(props) {
 		super(props);
 		this.drawOnCanvas = this.drawOnCanvas.bind(this);
@@ -48,6 +48,7 @@ class Axis extends React.Component {
 		var ticks = this.props.showTicks
 			? <AxisTicks {...this.props} />
 			: null;
+
 		var className = "";
 		if (this.props.className) className = this.props.defaultClassName.concat(this.props.className);
 		return (
@@ -61,22 +62,22 @@ class Axis extends React.Component {
 }
 
 Axis.propTypes = {
-	className: React.PropTypes.string.isRequired,
-	defaultClassName: React.PropTypes.string.isRequired,
-	transform: React.PropTypes.arrayOf(Number).isRequired,
-	orient: React.PropTypes.oneOf(["top", "bottom", "left", "right"]).isRequired,
-	innerTickSize: React.PropTypes.number,
-	outerTickSize: React.PropTypes.number,
-	tickFormat: React.PropTypes.func,
-	tickPadding: React.PropTypes.number,
-	tickSize: React.PropTypes.number,
-	ticks: React.PropTypes.array,
-	tickValues: React.PropTypes.array,
-	scale: React.PropTypes.func.isRequired,
-	showDomain: React.PropTypes.bool.isRequired,
-	showTicks: React.PropTypes.bool.isRequired,
-	fontFamily: React.PropTypes.string,
-	fontSize: React.PropTypes.number.isRequired,
+	className: PropTypes.string.isRequired,
+	defaultClassName: PropTypes.string.isRequired,
+	transform: PropTypes.arrayOf(Number).isRequired,
+	orient: PropTypes.oneOf(["top", "bottom", "left", "right"]).isRequired,
+	innerTickSize: PropTypes.number,
+	outerTickSize: PropTypes.number,
+	tickFormat: PropTypes.func,
+	tickPadding: PropTypes.number,
+	tickSize: PropTypes.number,
+	ticks: PropTypes.array,
+	tickValues: PropTypes.array,
+	scale: PropTypes.func.isRequired,
+	showDomain: PropTypes.bool.isRequired,
+	showTicks: PropTypes.bool.isRequired,
+	fontFamily: PropTypes.string,
+	fontSize: PropTypes.number.isRequired,
 };
 
 Axis.defaultProps = {
@@ -88,26 +89,25 @@ Axis.defaultProps = {
 };
 
 Axis.contextTypes = {
-	getCanvasContexts: React.PropTypes.func,
-	chartCanvasType: React.PropTypes.string,
-	chartData: React.PropTypes.object.isRequired,
-	chartId: React.PropTypes.number.isRequired,
-	margin: React.PropTypes.object.isRequired,
-	canvasOriginX: React.PropTypes.number,
-	canvasOriginY: React.PropTypes.number,
-	// secretToSuperFastCanvasDraw: React.PropTypes.array.isRequired,
-	callbackForCanvasDraw: React.PropTypes.func.isRequired,
+	getCanvasContexts: PropTypes.func,
+	chartCanvasType: PropTypes.string,
+	chartId: PropTypes.number.isRequired,
+	margin: PropTypes.object.isRequired,
+	canvasOriginX: PropTypes.number,
+	canvasOriginY: PropTypes.number,
+	// secretToSuperFastCanvasDraw: PropTypes.array.isRequired,
+	callbackForCanvasDraw: PropTypes.func.isRequired,
 };
 
-Axis.drawOnCanvasStatic = (margin, props, canvasOrigin, ctx, chartData, xScale, yScale) => {
+Axis.drawOnCanvasStatic = (margin, props, canvasOrigin, ctx, xScale, yScale) => {
 	var { transform, showDomain, showTicks } = props;
 	ctx.save();
 
 	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	ctx.translate(canvasOrigin[0] + transform[0], canvasOrigin[1] + transform[1]);
 
-	if (showDomain) AxisLine.drawOnCanvasStatic(props, ctx, chartData, xScale, yScale);
-	if (showTicks) AxisTicks.drawOnCanvasStatic(props, ctx, chartData, xScale, yScale);
+	if (showDomain) AxisLine.drawOnCanvasStatic(props, ctx, xScale, yScale);
+	if (showTicks) AxisTicks.drawOnCanvasStatic(props, ctx, xScale, yScale);
 
 	ctx.restore();
 };

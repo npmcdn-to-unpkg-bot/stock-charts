@@ -110,6 +110,20 @@ export function getChartDataConfig(props, innerDimensions, other) {
     }));
 };
 
+function setRange(scale, height, padding, flipYScale) {
+    if (scale.rangeRoundPoints) {
+        if (isNaN(padding)) throw new Error("padding has to be a number for ordinal scale");
+        scale.rangeRoundPoints(flipYScale ? [0, height] : [height, 0], padding);
+    } else {
+        var { top, bottom } = isNaN(padding)
+            ? padding
+            : { top: padding, bottom: padding };
+
+        scale.range(flipYScale ? [top, height - bottom] : [height - bottom, top]);
+    }
+    return scale;
+}
+
 export function getChartData(props, innerDimensions, partialData, fullData, other, domainL, domainR) {
     var charts = getCharts(props);
 

@@ -1,6 +1,6 @@
 "use strict";
 
-import React from 'react';
+import React, { PropTypes } from "react";
 import objectAssign from "object-assign";
 
 import PureComponent from "./utils/PureComponent";
@@ -9,24 +9,14 @@ import { getChartOrigin } from "./utils/ChartDataUtil";
 
 class Chart extends PureComponent {
 	getChildContext() {
-		var chartData = this.context.chartData.filter((each) => each.id === this.props.id)[0];
+		var { id: chartId } = this.props;
+		var chartConfig = this.context.chartConfig.filter((each) => each.id === chartId)[0];
 
-		var originX = 0.5 + chartData.config.origin[0] + this.context.margin.left;
-		var originY = 0.5 + chartData.config.origin[1] + this.context.margin.top;
+		var { width, height } = chartConfig;
+		var canvasOriginX = 0.5 + chartConfig.origin[0] + this.context.margin.left;
+		var canvasOriginY = 0.5 + chartConfig.origin[1] + this.context.margin.top;
 
-		return {
-			chartId: this.props.id,
-			xScale: chartData.plot.scales.xScale,
-			yScale: chartData.plot.scales.yScale,
-			xAccessor: chartData.config.xAccessor,
-			overlays: chartData.config.overlays,
-			compareSeries: chartData.config.compareSeries,
-			chartData: chartData,
-			width: chartData.config.width,
-			height: chartData.config.height,
-			canvasOriginX: originX,
-			canvasOriginY: originY,
-		};
+		return { chartId, chartConfig, canvasOriginX, canvasOriginY, width, height };
 	}
 	render() {
 		var origin = getChartOrigin(this.props.origin, this.context.width, this.context.height);
@@ -69,30 +59,29 @@ Chart.defaultProps = {
 	transformDataAs: "none",
 	yDomainUpdate: true,
 	origin: [0, 0],
+	yScale: d3.scale.linear(),
 	padding: { top: 0, right: 0, bottom: 0, left: 0 },
 };
 
 Chart.contextTypes = {
-	width: React.PropTypes.number.isRequired,
-	height: React.PropTypes.number.isRequired,
-	chartData: React.PropTypes.array,
-	margin: React.PropTypes.object.isRequired,
-	interactiveState: React.PropTypes.array.isRequired,
+	width: PropTypes.number.isRequired,
+	height: PropTypes.number.isRequired,
+	chartConfig: PropTypes.array,
+	margin: PropTypes.object.isRequired,
+	interactiveState: PropTypes.array.isRequired,
+	currentItem: PropTypes.object.isRequired,
+	mouseXY: PropTypes.array,
+	show: PropTypes.bool,
 	// adding here even when this is not used by Chart, refer to https://github.com/facebook/react/issues/2517
 };
 
 Chart.childContextTypes = {
-	xScale: React.PropTypes.func.isRequired,
-	yScale: React.PropTypes.func.isRequired,
-	xAccessor: React.PropTypes.func.isRequired,
-	chartData: React.PropTypes.object.isRequired,
-	overlays: React.PropTypes.array.isRequired,
-	compareSeries: React.PropTypes.array.isRequired,
-	width: React.PropTypes.number.isRequired,
-	height: React.PropTypes.number.isRequired,
-	canvasOriginX: React.PropTypes.number,
-	canvasOriginY: React.PropTypes.number,
-	chartId: React.PropTypes.number.isRequired,
+	height: PropTypes.number,
+	width: PropTypes.number,
+	chartConfig: PropTypes.object.isRequired,
+	canvasOriginX: PropTypes.number,
+	canvasOriginY: PropTypes.number,
+	chartId: PropTypes.number.isRequired,
 };
 
 export default Chart;

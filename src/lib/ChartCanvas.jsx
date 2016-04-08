@@ -13,12 +13,13 @@ import CanvasContainer from "./CanvasContainer";
 import eodIntervalCalculator from "./scale/eodIntervalCalculator";
 import evaluator from "./scale/evaluator";
 
-function shouldResetChart(thisProps, nextProps) {
-	var candidates = ["seriesName", /* "data",*/"interval", "discontinous",
+const CANDIDATES_FOR_RESET = ["seriesName", /* "data",*/"interval", "discontinous",
 		"intervalCalculator", "allowedIntervals",
 		"xScale", /* "xAccessor",*/"map", "dataEvaluator",
 		"indexAccessor", "indexMutator"];
-	return !candidates.every(key => {
+
+function shouldResetChart(thisProps, nextProps) {
+	return !CANDIDATES_FOR_RESET.every(key => {
 		var result = shallowEqual(thisProps[key], nextProps[key]);
 		// console.log(key, result);
 		return result;
@@ -137,6 +138,31 @@ class ChartCanvas extends Component {
 	}
 	componentWillReceiveProps(nextProps) {
 		var reset = shouldResetChart(this.props, nextProps);
+
+
+		if (reset) {
+			if (process.env.NODE_ENV !== "production") console.log("RESET CHART, one or more of these props changed", CANDIDATES_FOR_RESET);
+			this.setState(calculateState(nextProps));
+		} else if (!shallowEqual(this.props.xExtents, nextProps.xExtents)) {
+			if (process.env.NODE_ENV !== "production") console.log("xExtents changed");
+			// since the xExtents changed update fullData, plotData, xExtentsCalculator to state
+			let { fullData, plotData, xExtentsCalculator, xScale } = calculateState(nextProps);
+			this.setState({ fullData, plotData, xExtentsCalculator, xScale, dataAltered: false });
+		} else if (this.props.data !== nextProps.data) {
+			if (process.env.NODE_ENV !== "production") console.log("data is changed but seriesName did not");
+			// this means there are more points pushed/removed or existing points are altered
+			// console.log("data changed");
+			let { fullData } = calculateFullData(nextProps);
+			this.setState({ fullData, dataAltered: true });
+		} else if (!shallowEqual(this.props.calculator, nextProps.calculator)) {
+			if (process.env.NODE_ENV !== "production") console.log("calculator changed");
+			// data did not change but calculator changed, so update only the fullData to state
+			let { fullData } = calculateFullData(nextProps);
+			this.setState({ fullData, dataAltered: false });
+		} else {
+			if (process.env.NODE_ENV !== "production")
+				console.log("Trivial change, may be width/height or type changed, but that does not matter");
+		}
 	}
 	render() {
 		var cursor = getCursorStyle(this.props.children);

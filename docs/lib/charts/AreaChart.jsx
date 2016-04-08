@@ -18,13 +18,11 @@ class AreaChart extends React.Component {
 				seriesName="MSFT"
 				data={data} type={type}
 				xAccessor={d => d.date} xScale={d3.time.scale()}
-				xExtents={[new Date(2011, 0, 1), new Date(2013, 0, 2)]}>
-				<Chart id={0} xAccessor={(d) => d.date}>
+				xExtents={[new Date(1900, 0, 1), new Date(2020, 0, 2)]}>
+				<Chart id={0} yExtents={d => d.close}>
 					<XAxis axisAt="bottom" orient="bottom" ticks={6}/>
 					<YAxis axisAt="left" orient="left" />
-					<DataSeries id={0} yAccessor={(d) => d.close} >
-						<AreaSeries />
-					</DataSeries>
+					<AreaSeries yAccessor={(d) => d.close}/>
 				</Chart>
 			</ChartCanvas>
 		);

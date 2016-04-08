@@ -4,7 +4,14 @@ import React, { PropTypes, Component } from "react";
 import PureComponent from "./utils/PureComponent";
 import { getNewChartConfig, getChartConfigWithUpdatedYScales, getCurrentItems } from "./utils/ChartDataUtil";
 import { DummyTransformer } from "./transforms";
-import { isReactVersion13 } from "./utils/utils";
+import {
+	last,
+	isDefined,
+	isNotDefined,
+	clearCanvas,
+	getClosestItemIndexes,
+	shallowEqual,
+} from "./utils";
 
 import objectAssign from "object-assign";
 
@@ -14,6 +21,24 @@ function getLongValue(value) {
 	}
 	return value;
 }
+
+function setXRange(xScale, dimensions, padding, direction = 1) {
+	if (xScale.rangeRoundPoints) {
+		if (isNaN(padding)) throw new Error("padding has to be a number for ordinal scale");
+		xScale.rangeRoundPoints([0, dimensions.width], padding);
+	} else {
+		var { left, right } = isNaN(padding)
+			? padding
+			: { left: padding, right: padding };
+		if (direction > 0) {
+			xScale.range([left, dimensions.width - right]);
+		} else {
+			xScale.range([dimensions.width - right, left]);
+		}
+	}
+	return xScale;
+}
+
 class EventHandler extends PureComponent {
 	constructor(props, context) {
 		super(props, context);
@@ -61,15 +86,10 @@ class EventHandler extends PureComponent {
 		var chartConfig = getChartConfigWithUpdatedYScales(getNewChartConfig(dimensions, children), plotData);
 
 		this.setState({
-			data: data,
-			rawData: rawData,
-			options: options,
-			plotData: updatePlotData,
-			chartData: chartData,
-			interval: this.props.interval,
-			mainChart: mainChart,
-			currentCharts: [mainChart],
-			initialRender: true,
+			showingInterval,
+			xScale: setXRange(xScale, dimensions, padding, direction),
+			plotData,
+			chartConfig,
 		});
 	}
 	componentWillReceiveProps(nextProps) {
@@ -79,38 +99,42 @@ class EventHandler extends PureComponent {
 		return this.state.canvas || this.props.canvasContexts();
 	}
 	getChildContext() {
+		var { showingInterval } = this.state;
+		var { fullData } = this.props;
 		return {
 			plotData: this.state.plotData,
-			chartData: this.state.chartData,
-			currentItems: this.state.currentItems,
-			mainChart: this.state.mainChart,
+			data: isDefined(showingInterval) ? fullData[showingInterval] : fullData,
+			chartConfig: this.state.chartConfig,
+			currentCharts: this.state.currentCharts,
+			currentItem: this.state.currentItem,
 			show: this.state.show,
 			mouseXY: this.state.mouseXY,
-			interval: this.state.interval,
-			currentCharts: this.state.currentCharts,
+			interval: this.state.showingInterval,
 			width: this.props.dimensions.width,
 			height: this.props.dimensions.height,
 			chartCanvasType: this.props.type,
-			dateAccessor: this.state.options.dateAccessor,
+			xScale: this.state.xScale,
+			xAccessor: this.props.xAccessor,
 
 			margin: this.props.margin,
-			dataTransform: this.props.dataTransform,
 			interactiveState: this.state.interactiveState,
 
 			callbackForCanvasDraw: this.pushCallbackForCanvasDraw,
 			getAllCanvasDrawCallback: this.getAllCanvasDrawCallback,
 			subscribe: this.subscribe,
 			unsubscribe: this.unsubscribe,
+			setInteractiveState: this.setInteractiveState,
 			getCanvasContexts: this.getCanvasContexts,
 			onMouseMove: this.handleMouseMove,
 			onMouseEnter: this.handleMouseEnter,
 			onMouseLeave: this.handleMouseLeave,
 			onZoom: this.handleZoom,
+			onPinchZoom: this.handlePinchZoom,
 			onPanStart: this.handlePanStart,
 			onPan: this.handlePan,
 			onPanEnd: this.handlePanEnd,
 			onFocus: this.handleFocus,
-			deltaXY: this.deltaXY,
+			deltaXY: this.state.deltaXY,
 			panInProgress: this.state.panInProgress,
 			focus: this.state.focus
 		};
@@ -225,17 +249,8 @@ class EventHandler extends PureComponent {
 		return newInteractiveState;
 	}
 	render() {
-		var children = React.Children.map(this.props.children, (child) => {
-			var newChild = isReactVersion13()
-				? React.withContext(this.getChildContext(), () => {
-					return React.createElement(child.type, objectAssign({key: child.key, ref: child.ref}, child.props));
-				})
-				: child;
-
-		return newChild;
-		});
 		return (
-			<g>{children}</g>
+			<g>{this.props.children}</g>
 		);
 	}
 }
@@ -245,39 +260,64 @@ EventHandler.defaultProps = {
 };
 
 EventHandler.childContextTypes = {
-	plotData: React.PropTypes.array,
-	chartData: React.PropTypes.array,
-	currentItems: React.PropTypes.array,
-	show: React.PropTypes.bool,
-	mouseXY: React.PropTypes.array,
-	interval: React.PropTypes.string,
-	currentCharts: React.PropTypes.array,
-	mainChart: React.PropTypes.number,
-	width: React.PropTypes.number.isRequired,
-	height: React.PropTypes.number.isRequired,
-	chartCanvasType: React.PropTypes.oneOf(["svg", "hybrid"]).isRequired,
-	dateAccessor: React.PropTypes.func,
+	plotData: PropTypes.array,
+	data: PropTypes.array,
+	chartConfig: PropTypes.arrayOf(
+		PropTypes.shape({
+			id: PropTypes.number.isRequired,
+			origin: PropTypes.arrayOf(PropTypes.number).isRequired,
+			padding: PropTypes.oneOfType([
+				PropTypes.number,
+				PropTypes.shape({
+					top: PropTypes.number,
+					bottom: PropTypes.number,
+				})
+			]),
+			yExtents: PropTypes.arrayOf(PropTypes.func).isRequired,
+			yScale: PropTypes.func.isRequired,
+			mouseCoordinates: PropTypes.shape({
+				at: PropTypes.string,
+				format: PropTypes.func
+			}),
+			width: PropTypes.number.isRequired,
+			height: PropTypes.number.isRequired,
+		})
+	).isRequired,
+	xScale: PropTypes.func.isRequired,
+	xAccessor: PropTypes.func.isRequired,
+	currentItem: PropTypes.object,
+	show: PropTypes.bool,
+	mouseXY: PropTypes.array,
+	interval: PropTypes.string,
+	currentCharts: PropTypes.array,
+	mainChart: PropTypes.number,
+	width: PropTypes.number.isRequired,
+	height: PropTypes.number.isRequired,
+	chartCanvasType: PropTypes.oneOf(["svg", "hybrid"]).isRequired,
+	dateAccessor: PropTypes.func,
 
-	margin: React.PropTypes.object.isRequired,
-	dataTransform: React.PropTypes.array,
-	interactiveState: React.PropTypes.array.isRequired,
+	margin: PropTypes.object.isRequired,
+	dataTransform: PropTypes.array,
+	interactiveState: PropTypes.array.isRequired,
 
-	subscribe: React.PropTypes.func,
-	unsubscribe: React.PropTypes.func,
-	callbackForCanvasDraw: React.PropTypes.func,
-	getAllCanvasDrawCallback: React.PropTypes.func,
-	getCanvasContexts: React.PropTypes.func,
-	onMouseMove: React.PropTypes.func,
-	onMouseEnter: React.PropTypes.func,
-	onMouseLeave: React.PropTypes.func,
-	onZoom: React.PropTypes.func,
-	onPanStart: React.PropTypes.func,
-	onPan: React.PropTypes.func,
-	onPanEnd: React.PropTypes.func,
-	panInProgress: React.PropTypes.bool.isRequired,
-	focus: React.PropTypes.bool.isRequired,
-	onFocus: React.PropTypes.func,
-	deltaXY: React.PropTypes.func,
+	subscribe: PropTypes.func,
+	unsubscribe: PropTypes.func,
+	setInteractiveState: PropTypes.func,
+	callbackForCanvasDraw: PropTypes.func,
+	getAllCanvasDrawCallback: PropTypes.func,
+	getCanvasContexts: PropTypes.func,
+	onMouseMove: PropTypes.func,
+	onMouseEnter: PropTypes.func,
+	onMouseLeave: PropTypes.func,
+	onZoom: PropTypes.func,
+	onPinchZoom: PropTypes.func,
+	onPanStart: PropTypes.func,
+	onPan: PropTypes.func,
+	onPanEnd: PropTypes.func,
+	panInProgress: PropTypes.bool.isRequired,
+	focus: PropTypes.bool.isRequired,
+	onFocus: PropTypes.func,
+	deltaXY: PropTypes.arrayOf(Number),
 };
 
 export default EventHandler;

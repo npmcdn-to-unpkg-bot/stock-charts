@@ -26,16 +26,7 @@ var OverviewPage = React.createClass({
 						<aside dangerouslySetInnerHTML={{__html: require('md/AREACHART')}}></aside>
 					</Section>
 				</Row>
-				<Row>
-					<Section colSpan={2}>
-						<AreaChartWithYPercent data={this.props.someData} type="svg" />
-					</Section>
-				</Row>
-				<Row>
-					<Section colSpan={2}>
-						<AreaChartWithZoomPan data={this.props.someData} type="svg" />
-					</Section>
-				</Row>
+
 			</ContentSection>
 		);
 	}

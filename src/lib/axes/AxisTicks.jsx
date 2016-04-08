@@ -1,13 +1,8 @@
 "use strict";
 
-import React from "react";
-import objectAssign from "object-assign";
+import React, { PropTypes, Component } from "react";
 
-import { hexToRGBA } from "../utils/utils";
-
-function d3_identity(d) {
-	return d;
-}
+import { hexToRGBA, isNotDefined, identity } from "../utils";
 
 function tickTransform_svg_axisX(scale, tick) {
 	return [~~ (0.5 + scale(tick)), 0];
@@ -17,7 +12,7 @@ function tickTransform_svg_axisY(scale, tick) {
 	return [0, ~~ (0.5 + scale(tick))];
 }
 
-class Tick extends React.Component {
+class Tick extends Component {
 	render() {
 		var { transform, tickStroke, tickStrokeOpacity, textAnchor, fontSize, fontFamily } = this.props;
 		var { x, y, x2, y2, dy } = this.props;
@@ -38,21 +33,21 @@ class Tick extends React.Component {
 }
 
 Tick.propTypes = {
-	transform: React.PropTypes.arrayOf(Number),
-	tickStroke: React.PropTypes.string,
-	tickStrokeOpacity: React.PropTypes.number,
-	textAnchor: React.PropTypes.string,
-	fontSize: React.PropTypes.number,
-	fontFamily: React.PropTypes.string,
-	x: React.PropTypes.number,
-	y: React.PropTypes.number,
-	x2: React.PropTypes.number,
-	y2: React.PropTypes.number,
-	dy: React.PropTypes.string,
-	children: React.PropTypes.node.isRequired,
+	transform: PropTypes.arrayOf(Number),
+	tickStroke: PropTypes.string,
+	tickStrokeOpacity: PropTypes.number,
+	textAnchor: PropTypes.string,
+	fontSize: PropTypes.number,
+	fontFamily: PropTypes.string,
+	x: PropTypes.number,
+	y: PropTypes.number,
+	x2: PropTypes.number,
+	y2: PropTypes.number,
+	dy: PropTypes.string,
+	children: PropTypes.node.isRequired,
 };
 
-Tick.drawOnCanvasStatic = (tick, ctx, chartData, result) => {
+Tick.drawOnCanvasStatic = (tick, ctx, result) => {
 	var { scale, tickTransform, canvas_dy, x, y, x2, y2, format } = result;
 
 	var origin = tickTransform(scale, tick);
@@ -66,7 +61,7 @@ Tick.drawOnCanvasStatic = (tick, ctx, chartData, result) => {
 	ctx.fillText(format(tick), origin[0] + x, origin[1] + y + canvas_dy);
 };
 
-class AxisTicks extends React.Component {
+class AxisTicks extends Component {
 	render() {
 		var result = AxisTicks.helper(this.props, this.props.scale);
 		var { ticks, scale, tickTransform, tickStroke, tickStrokeOpacity, dy, x, y, x2, y2, textAnchor, fontSize, fontFamily, format } = result;
@@ -88,15 +83,15 @@ class AxisTicks extends React.Component {
 }
 
 AxisTicks.propTypes = {
-	orient: React.PropTypes.oneOf(["top", "bottom", "left", "right"]).isRequired,
-	innerTickSize: React.PropTypes.number,
-	tickFormat: React.PropTypes.func,
-	tickPadding: React.PropTypes.number,
-	ticks: React.PropTypes.array,
-	tickValues: React.PropTypes.array,
-	scale: React.PropTypes.func.isRequired,
-	tickStroke: React.PropTypes.string,
-	tickStrokeOpacity: React.PropTypes.number,
+	orient: PropTypes.oneOf(["top", "bottom", "left", "right"]).isRequired,
+	innerTickSize: PropTypes.number,
+	tickFormat: PropTypes.func,
+	tickPadding: PropTypes.number,
+	ticks: PropTypes.array,
+	tickValues: PropTypes.array,
+	scale: PropTypes.func.isRequired,
+	tickStroke: PropTypes.string,
+	tickStrokeOpacity: PropTypes.number,
 };
 
 AxisTicks.defaultProps = {
@@ -111,17 +106,19 @@ AxisTicks.helper = (props, scale) => {
 	var { orient, innerTickSize, tickFormat, tickPadding, fontSize, fontFamily } = props;
 	var { ticks: tickArguments, tickValues, tickStroke, tickStrokeOpacity } = props;
 
-	var ticks = tickValues === undefined
+	var ticks = isNotDefined(tickValues)
 		? (scale.ticks
 			? scale.ticks.apply(scale, tickArguments)
 			: scale.domain())
 		: tickValues;
 
-	var format = tickFormat === undefined
-		? (scale.tickFormat
+	var baseFormat = scale.tickFormat
 			? scale.tickFormat.apply(scale, tickArguments)
-			: d3_identity)
-		: tickFormat;
+			: identity;
+
+	var format = isNotDefined(tickFormat)
+		? baseFormat
+		: d => baseFormat(d) ? tickFormat(d) : "";
 
 	var sign = orient === "top" || orient === "left" ? -1 : 1;
 	var tickSpacing = Math.max(innerTickSize, 0) + tickPadding;
@@ -150,8 +147,8 @@ AxisTicks.helper = (props, scale) => {
 	return { ticks, scale, tickTransform, tickStroke, tickStrokeOpacity, dy, canvas_dy, x, y, x2, y2, textAnchor, fontSize, fontFamily, format };
 };
 
-AxisTicks.drawOnCanvasStatic = (props, ctx, chartData, xScale, yScale) => {
-	props = objectAssign({}, AxisTicks.defaultProps, props);
+AxisTicks.drawOnCanvasStatic = (props, ctx, xScale, yScale) => {
+	props = { ...AxisTicks.defaultProps, ...props };
 
 	var { orient } = props;
 	var xAxis = (orient === "bottom" || orient === "top");
@@ -168,7 +165,7 @@ AxisTicks.drawOnCanvasStatic = (props, ctx, chartData, xScale, yScale) => {
 	// ctx.textBaseline = 'middle';
 
 	result.ticks.forEach((tick) => {
-		Tick.drawOnCanvasStatic(tick, ctx, chartData, result);
+		Tick.drawOnCanvasStatic(tick, ctx, result);
 	});
 };
 

@@ -1,33 +1,33 @@
 "use strict";
 
-import React from "react";
+
+import React, { PropTypes, Component } from "react";
 
 import Line from "./Line";
 import Area from "./Area";
 
 import wrap from "./wrap";
 
-class AreaSeries extends React.Component {
+class AreaSeries extends Component {
 	render() {
 		var { props } = this;
-		let { className, xScale, yScale, xAccessor, yAccessor, plotData, type, stroke, fill } = props;
+		var { className, xScale, yScale, xAccessor, yAccessor, plotData, type, stroke, fill, baseAt } = props;
 
-		let { opacity } = props;
+		var { opacity } = props;
 
 		return (
-			<g>
+			<g className={className}>
 				<Line
-					className={className}
 					xScale={xScale} yScale={yScale}
 					xAccessor={xAccessor} yAccessor={yAccessor}
 					plotData={plotData}
 					stroke={stroke} fill="none"
 					type={type} />
 				<Area
-					className={className}
 					xScale={xScale} yScale={yScale}
 					xAccessor={xAccessor} yAccessor={yAccessor}
 					plotData={plotData}
+					base={baseAt}
 					stroke="none" fill={fill} opacity={opacity}
 					type={type} />
 			</g>
@@ -36,16 +36,17 @@ class AreaSeries extends React.Component {
 }
 
 AreaSeries.propTypes = {
-	stroke: React.PropTypes.string,
-	fill: React.PropTypes.string.isRequired,
-	opacity: React.PropTypes.number.isRequired,
-	className: React.PropTypes.string,
+	stroke: PropTypes.string,
+	fill: PropTypes.string.isRequired,
+	opacity: PropTypes.number.isRequired,
+	className: PropTypes.string,
 };
 
 AreaSeries.defaultProps = {
 	stroke: "#4682B4",
 	opacity: 0.5,
 	fill: "#4682B4",
+	className: "react-stockcharts-area"
 };
 
 AreaSeries.yAccessor = (d) => d.close;

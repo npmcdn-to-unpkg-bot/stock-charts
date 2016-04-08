@@ -1,6 +1,6 @@
 "use strict";
 
-import React from 'react';
+import React, { PropTypes } from "react";
 import Axis from "./Axis";
 import PureComponent from "../utils/PureComponent";
 
@@ -23,6 +23,7 @@ class XAxis extends PureComponent {
 
     return (
 			<Axis {...this.props}
+				range={[0, this.context.width]}
 				transform={[0, axisLocation]}
 				showTicks={showTicks} tickFormat={tickFormat} ticks={ticks}
 				scale={this.context.xScale} />
@@ -48,7 +49,6 @@ XAxis.propTypes = {
 };
 
 XAxis.defaultProps = {
-	namespace: "ReStock.XAxis",
 	showGrid: false,
 	showTicks: true,
 	className: "react-stockcharts-x-axis",
@@ -56,10 +56,10 @@ XAxis.defaultProps = {
 };
 
 XAxis.contextTypes = {
-	xScale: React.PropTypes.func.isRequired,
-	yScale: React.PropTypes.func.isRequired,
-	height: React.PropTypes.number.isRequired,
-	width: React.PropTypes.number.isRequired,
+	xScale: PropTypes.func.isRequired,
+	chartConfig: PropTypes.object.isRequired,
+	height: PropTypes.number.isRequired,
+	width: PropTypes.number.isRequired,
 };
 
 export default XAxis;

@@ -1,7 +1,6 @@
 "use strict";
 
-import React from "react";
-import d3 from "d3";
+import React, { PropTypes } from "react";
 
 import Axis from "./Axis";
 import PureComponent from "../utils/PureComponent";
@@ -9,10 +8,10 @@ import PureComponent from "../utils/PureComponent";
 class YAxis extends PureComponent {
 	render() {
 		var { axisAt, tickFormat, ticks, percentScale, tickValues } = this.props;
-		var { yScale, chartData } = this.context;
-		if (percentScale) yScale = yScale.copy().domain([0, 1]);
+		var { chartConfig } = this.context;
+		var yScale = (percentScale) ? chartConfig.yScale.copy().domain([0, 1]) : chartConfig.yScale;
 
-		tickValues = tickValues || chartData.config.yTicks;
+		tickValues = tickValues || chartConfig.yTicks;
 
 		var axisLocation;
 
@@ -21,13 +20,10 @@ class YAxis extends PureComponent {
 		else if (axisAt === "middle") axisLocation = (this.context.width) / 2;
 		else axisLocation = axisAt;
 
-		if (this.context.compareSeries.length > 0) {
-			tickFormat = d3.format(".0%");
-		}
-
 		return (
 			<Axis {...this.props}
 				transform={[axisLocation, 0]}
+				range={[0, this.context.height]}
 				tickFormat={tickFormat} ticks={[ticks]} tickValues={tickValues}
 				scale={yScale} />
 		);
@@ -35,36 +31,33 @@ class YAxis extends PureComponent {
 }
 
 YAxis.propTypes = {
-	axisAt: React.PropTypes.oneOfType([
-		React.PropTypes.oneOf(["left", "right", "middle"]),
-		React.PropTypes.number
+	axisAt: PropTypes.oneOfType([
+		PropTypes.oneOf(["left", "right", "middle"]),
+		PropTypes.number
 	]).isRequired,
-	orient: React.PropTypes.oneOf(["left", "right"]).isRequired,
-	innerTickSize: React.PropTypes.number,
-	outerTickSize: React.PropTypes.number,
-	tickFormat: React.PropTypes.func,
-	tickPadding: React.PropTypes.number,
-	tickSize: React.PropTypes.number,
-	ticks: React.PropTypes.number,
-	tickValues: React.PropTypes.array,
-	percentScale: React.PropTypes.bool,
-	showTicks: React.PropTypes.bool,
-	showDomain: React.PropTypes.bool,
-	className: React.PropTypes.string,
+	orient: PropTypes.oneOf(["left", "right"]).isRequired,
+	innerTickSize: PropTypes.number,
+	outerTickSize: PropTypes.number,
+	tickFormat: PropTypes.func,
+	tickPadding: PropTypes.number,
+	tickSize: PropTypes.number,
+	ticks: PropTypes.number,
+	tickValues: PropTypes.array,
+	percentScale: PropTypes.bool,
+	showTicks: PropTypes.bool,
+	showDomain: PropTypes.bool,
+	className: PropTypes.string,
 };
 YAxis.defaultProps = {
-	namespace: "ReStock.YAxis",
 	showGrid: false,
 	showDomain: false,
 	className: "react-stockcharts-y-axis",
 	ticks: 10,
 };
 YAxis.contextTypes = {
-	chartData: React.PropTypes.object.isRequired,
-	xScale: React.PropTypes.func.isRequired,
-	yScale: React.PropTypes.func.isRequired,
-	width: React.PropTypes.number.isRequired,
-	compareSeries: React.PropTypes.array.isRequired,
+	chartConfig: PropTypes.object.isRequired,
+	xScale: PropTypes.func.isRequired,
+	width: PropTypes.number.isRequired,
 };
 
 export default YAxis;
