@@ -1,9 +1,14 @@
 "use strict";
 
-import React, { PropTypes, Component } from "react";
-import PureComponent from "./utils/PureComponent";
-import { getNewChartConfig, getChartConfigWithUpdatedYScales, getCurrentItems } from "./utils/ChartDataUtil";
-import { DummyTransformer } from "./transforms";
+import React, {
+	PropTypes, Component
+}
+from "react";
+
+import {
+	getNewChartConfig, getChartConfigWithUpdatedYScales, getCurrentCharts, getCurrentItem
+}
+from "./utils/ChartDataUtil";
 import {
 	last,
 	isDefined,
@@ -11,25 +16,21 @@ import {
 	clearCanvas,
 	getClosestItemIndexes,
 	shallowEqual,
-} from "./utils";
-
-import objectAssign from "object-assign";
-
-function getLongValue(value) {
-	if (value instanceof Date) {
-		return value.getTime();
-	}
-	return value;
 }
+from "./utils";
+
 
 function setXRange(xScale, dimensions, padding, direction = 1) {
 	if (xScale.rangeRoundPoints) {
 		if (isNaN(padding)) throw new Error("padding has to be a number for ordinal scale");
 		xScale.rangeRoundPoints([0, dimensions.width], padding);
 	} else {
-		var { left, right } = isNaN(padding)
-			? padding
-			: { left: padding, right: padding };
+		var {
+			left, right
+		} = isNaN(padding) ? padding : {
+			left: padding,
+			right: padding
+		};
 		if (direction > 0) {
 			xScale.range([left, dimensions.width - right]);
 		} else {
@@ -39,7 +40,7 @@ function setXRange(xScale, dimensions, padding, direction = 1) {
 	return xScale;
 }
 
-class EventHandler extends PureComponent {
+class EventHandler extends Component {
 	constructor(props, context) {
 		super(props, context);
 		/* Event Handlers */
@@ -47,39 +48,37 @@ class EventHandler extends PureComponent {
 		this.handleMouseMove = this.handleMouseMove.bind(this);
 		this.handleMouseLeave = this.handleMouseLeave.bind(this);
 
+		this.handlePanStart = this.handlePanStart.bind(this);
+		this.handlePan = this.handlePan.bind(this);
+		this.handlePanEnd = this.handlePanEnd.bind(this);
+
 		this.getCanvasContexts = this.getCanvasContexts.bind(this);
 		this.pushCallbackForCanvasDraw = this.pushCallbackForCanvasDraw.bind(this);
 
 		this.subscriptions = [];
 
 		this.canvasDrawCallbackList = [];
+		this.panHappened = false;
 
 		this.state = {
+			focus: false,
 			show: false,
 			mouseXY: [0, 0],
-			currentItems: [],
+			currentItem: {},
+			interactiveState: [],
+			currentCharts: [],
+			panInProgress: false,
 		};
 
-	}
-	getTransformedData(rawData, defaultDataTransform, dataTransform, interval) {
-		var i = 0, eachTransform, options = {}, data = rawData;
-		var transforms = defaultDataTransform.concat(dataTransform);
-		for (i = 0; i < transforms.length; i++) {
-			//console.log(transforms[i]);
-			eachTransform = transforms[i].transform();
-			options = objectAssign({}, options, transforms[i].options);
-			options = eachTransform.options(options);
-			data = eachTransform(data, interval);
-		}
-		return {
-			data: data,
-			options: options
-		};
 	}
 	componentWillMount() {
 
-		var { plotData, showingInterval, direction } = this.props;
-		var { xScale, dimensions, children, postCalculator, padding } = this.props;
+		var {
+			plotData, showingInterval, direction
+		} = this.props;
+		var {
+			xScale, dimensions, children, postCalculator, padding
+		} = this.props;
 
 		plotData = postCalculator(plotData);
 
@@ -99,8 +98,12 @@ class EventHandler extends PureComponent {
 		return this.state.canvas || this.props.canvasContexts();
 	}
 	getChildContext() {
-		var { showingInterval } = this.state;
-		var { fullData } = this.props;
+		var {
+			showingInterval
+		} = this.state;
+		var {
+			fullData
+		} = this.props;
 		return {
 			plotData: this.state.plotData,
 			data: isDefined(showingInterval) ? fullData[showingInterval] : fullData,
@@ -140,7 +143,9 @@ class EventHandler extends PureComponent {
 		};
 	}
 	pushCallbackForCanvasDraw(findThis, replaceWith) {
-		var { canvasDrawCallbackList } = this;
+		var {
+			canvasDrawCallbackList
+		} = this;
 		if (replaceWith) {
 			canvasDrawCallbackList.forEach((each, idx) => {
 				if (each === findThis) {
@@ -151,50 +156,51 @@ class EventHandler extends PureComponent {
 			canvasDrawCallbackList.push(findThis);
 		}
 	}
-	handleMouseMove(mouseXY, e) {
-		var currentCharts = this.state.chartData.filter((chartData) => {
-			var top = chartData.config.origin[1];
-			var bottom = top + chartData.config.height;
-			return (mouseXY[1] > top && mouseXY[1] < bottom);
-		}).map((chartData) => chartData.id);
+	handleMouseMove(mouseXY, inputType, e) {
+		var {
+			chartConfig, plotData, xScale
+		} = this.state;
+		var {
+			xAccessor
+		} = this.props;
 
-		var currentItems = getCurrentItems(this.state.chartData, mouseXY, this.state.plotData);
+		var currentCharts = getCurrentCharts(chartConfig, mouseXY);
 
-		var interactiveState = this.triggerCallback(
-			"mousemove",
-			objectAssign({}, this.state, { currentItems, currentCharts }),
+		var currentItem = getCurrentItem(xScale, xAccessor, mouseXY, plotData);
+		// optimization oportunity do not change currentItem if it is not the same as prev
+
+		var interactiveState = inputType === "mouse" ? this.triggerCallback(
+			"mousemove", {...this.state, currentItem, currentCharts
+			},
+			this.state.interactiveState,
+			e) : this.triggerCallback(
+			"touch", {...this.state, currentItem, currentCharts
+			},
 			this.state.interactiveState,
 			e);
 
 		var contexts = this.getCanvasContexts();
-
 		if (contexts && contexts.mouseCoord) {
-			this.clearCanvas([contexts.mouseCoord]);
+			clearCanvas([contexts.mouseCoord]);
+			this.clearInteractiveCanvas();
 		}
 		// console.log(interactiveState === this.state.interactiveState);
-		if (interactiveState !== this.state.interactiveState) this.clearInteractiveCanvas();
+		// if (interactiveState !== this.state.interactiveState) this.clearInteractiveCanvas();
 
 		this.setState({
-			mouseXY: mouseXY,
-			currentItems: currentItems,
-			show: true,
+			mouseXY,
+			currentItem,
 			currentCharts,
 			interactiveState,
 		});
 	}
+
 	handleMouseEnter() {
-		var { type, canvasContexts } = this.props;
-		var { canvases } = this.state;
-		if (type === "svg") {
-			canvases = null;
-		} else {
-			canvases = canvasContexts();
-		}
 		this.setState({
 			show: true,
-			canvases: canvases,
 		});
 	}
+
 	handleMouseLeave() {
 		var contexts = this.getCanvasContexts();
 
@@ -206,34 +212,171 @@ class EventHandler extends PureComponent {
 			show: false
 		});
 	}
+
+	handlePanStart(panStartDomain, panOrigin, dxy) {
+		// console.log("panStartDomain - ", panStartDomain, ", panOrigin - ", panOrigin);
+		this.setState({
+			panInProgress: true,
+			panStartXScale: this.state.xScale,
+			panOrigin: panOrigin,
+			focus: true,
+			deltaXY: dxy,
+			receivedPropsOnPanStart: this.state.receivedProps,
+		});
+		this.panHappened = false;
+	}
+
+	panHelper(mouseXY) {
+		var { panStartXScale: initialXScale, chartConfig: initialChartConfig } = this.state;
+		var { showingInterval, panOrigin } = this.state;
+		var { xAccessor, dimensions: { width }, fullData, xExtentsCalculator, postCalculator } = this.props;
+
+		var dx = mouseXY[0] - panOrigin[0];
+
+		if (isNotDefined(initialXScale.invert))
+			throw new Error("xScale provided does not have an invert() method."
+				+ "You are likely using an ordinal scale. This scale does not support zoom, pan");
+		var newDomain = initialXScale.range().map(x => x - dx).map(initialXScale.invert);
+
+		var { plotData, /* interval: updatedInterval,*/scale: updatedScale } = xExtentsCalculator
+			.data(fullData)
+			.width(width)
+			.scale(initialXScale)
+			.currentInterval(showingInterval)
+			.currentDomain(this.hackyWayToStopPanBeyondBounds__domain)
+			.currentPlotData(this.hackyWayToStopPanBeyondBounds__plotData)
+			.interval(showingInterval)(newDomain, xAccessor);
+
+		plotData = postCalculator(plotData);
+		// console.log(last(plotData));
+		var currentItem = getCurrentItem(updatedScale, xAccessor, mouseXY, plotData);
+		var chartConfig = getChartConfigWithUpdatedYScales(initialChartConfig, plotData);
+		var currentCharts = getCurrentCharts(chartConfig, mouseXY);
+
+		return {
+			xScale: updatedScale,
+			plotData,
+			mouseXY,
+			currentCharts,
+			chartConfig,
+			currentItem,
+		};
+
+	}
+
+	handlePan(mousePosition) {
+		this.panHappened = true;
+		var state = this.panHelper(mousePosition);
+
+		this.hackyWayToStopPanBeyondBounds__plotData = state.plotData;
+		this.hackyWayToStopPanBeyondBounds__domain = state.xScale.domain();
+
+		if (this.props.type !== "svg") {
+			var { axes: axesCanvasContext, mouseCoord: mouseContext } = this.getCanvasContexts();
+			var { mouseXY, chartConfig, plotData, currentItem, xScale, currentCharts } = state;
+			var { show } = this.state;
+			var { canvasDrawCallbackList } = this;
+
+			requestAnimationFrame(() => {
+				// this.clearCanvas([axesCanvasContext, mouseContext]);
+				// this.clearCanvas([axesCanvasContext, mouseContext]);
+				this.clearBothCanvas();
+				this.clearInteractiveCanvas();
+
+				// console.log(canvasDrawCallbackList.length)
+
+				chartConfig.forEach(eachChart => {
+					canvasDrawCallbackList
+						.filter(each => eachChart.id === each.chartId)
+						.forEach(each => {
+							var { yScale } = eachChart;
+
+							if (each.type === "axis") {
+								each.draw(axesCanvasContext, xScale, yScale);
+							} else if (each.type === "currentcoordinate") {
+								each.draw(mouseContext, show, xScale, yScale, currentItem);
+							} else if (each.type !== "interactive") {
+								each.draw(axesCanvasContext, xScale, yScale, plotData);
+							}
+						});
+
+				});
+				this.drawInteractive(state);
+				canvasDrawCallbackList
+					.filter(each => isNotDefined(each.chartId))
+					.filter(each => each.type === "axis")
+					.forEach(each => each.draw(axesCanvasContext, chartConfig));
+
+				canvasDrawCallbackList
+					.filter(each => each.type === "mouse")
+					.forEach(each => each.draw(mouseContext, show,
+						xScale, mouseXY, currentCharts, chartConfig, currentItem));
+
+			});
+		} else {
+			this.setState(state);
+		}
+	}
+
+	handlePanEnd(mousePosition, e) {
+		var state = this.panHelper(mousePosition);
+		// console.log(this.canvasDrawCallbackList.map(d => d.type));
+		this.hackyWayToStopPanBeyondBounds__plotData = null;
+		this.hackyWayToStopPanBeyondBounds__domain = null;
+
+		this.clearCanvasDrawCallbackList();
+
+		var { interactiveState, callbackList } = this.panHappened
+			? this.triggerCallback("panend", state, this.state.interactiveState, e)
+			: this.triggerCallback("click", state, this.state.interactiveState, e);
+
+		this.clearBothCanvas();
+		if (interactiveState !== this.state.interactive) this.clearInteractiveCanvas();
+
+		// console.log(interactiveState[0].interactive);
+		this.setState({
+			...state,
+			show: this.state.show,
+			panInProgress: false,
+			panStartXScale: null,
+			interactiveState,
+		}, () => {
+			if (isDefined(callbackList)) callbackList.forEach(callback => callback());
+		});
+	}
+
 	triggerCallback(eventType, state, interactiveState, event) {
-		var { plotData, mouseXY, currentCharts, chartData, currentItems } = state;
+		var {
+			currentCharts, chartConfig
+		} = state;
 		var callbackList = this.subscriptions.filter(each => each.eventType === eventType);
 		var delta = callbackList.map(each => {
-			var singleChartData = chartData.filter(eachItem => eachItem.id === each.forChart)[0];
-			var singleCurrentItem = currentItems.filter(eachItem => eachItem.id === each.forChart)[0];
-			return {
-				callback: each.callback,
-				forChart: each.forChart,
-				plotData,
-				mouseXY,
-				currentCharts,
-				currentItem: singleCurrentItem.data,
-				chartData: singleChartData
-			};
-		})
-		.filter(each => each.currentCharts.indexOf(each.forChart) >= -1)
-		.map(each => each.callback({
-			plotData: each.plotData,
-			mouseXY: each.mouseXY,
-			chartData: each.chartData,
-			currentItem: each.currentItem,
-		}, event));
+				var singleChartData = chartData.filter(eachItem => eachItem.id === each.forChart)[0];
+				var singleCurrentItem = currentItems.filter(eachItem => eachItem.id === each.forChart)[0];
+				return {
+					callback: each.callback,
+					forChart: each.forChart,
+					plotData,
+					mouseXY,
+					currentCharts,
+					currentItem: singleCurrentItem.data,
+					chartData: singleChartData
+				};
+			})
+			.filter(each => each.currentCharts.indexOf(each.forChart) >= -1)
+			.map(each => each.callback({
+				plotData: each.plotData,
+				mouseXY: each.mouseXY,
+				chartData: each.chartData,
+				currentItem: each.currentItem,
+			}, event));
 
 		// console.log(delta.length);
 		if (delta.length === 0) return interactiveState;
 
-		var i = 0, j = 0, added = false;
+		var i = 0,
+			j = 0,
+			added = false;
 		var newInteractiveState = interactiveState.slice(0);
 		for (i = 0; i < delta.length; i++) {
 			var each = delta[i];
@@ -254,11 +397,6 @@ class EventHandler extends PureComponent {
 		);
 	}
 }
-
-EventHandler.defaultProps = {
-	defaultDataTransform: [ { transform: DummyTransformer } ],
-};
-
 EventHandler.childContextTypes = {
 	plotData: PropTypes.array,
 	data: PropTypes.array,

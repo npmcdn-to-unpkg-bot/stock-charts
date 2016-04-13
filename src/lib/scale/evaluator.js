@@ -7,7 +7,8 @@ import {
 	isDefined,
 	isNotDefined,
 	isArray,
-} from "../utils";
+}
+from "../utils";
 
 import eodIntervalCalculator from "./eodIntervalCalculator";
 
@@ -22,9 +23,7 @@ function getFilteredResponse(dataForInterval, left, right, xAccessor) {
 
 function getDomain(inputDomain, width, filteredData, predicate, currentDomain, canShowTheseMany, realXAccessor) {
 	if (canShowTheseMany(width, filteredData.length)) {
-		var domain = predicate
-			? inputDomain
-			: [realXAccessor(first(filteredData)), realXAccessor(last(filteredData))]; // TODO fix me later
+		var domain = predicate ? inputDomain : [realXAccessor(first(filteredData)), realXAccessor(last(filteredData))]; // TODO fix me later
 		return domain;
 	}
 	if (process.env.NODE_ENV !== "production") {
@@ -35,41 +34,54 @@ function getDomain(inputDomain, width, filteredData, predicate, currentDomain, c
 
 function extentsWrapper(inputXAccessor, realXAccessor, allowedIntervals, canShowTheseMany, useWholeData = false) {
 	var data, inputXAccessor, interval, width, currentInterval, currentDomain, currentPlotData, scale;
+
 	function domain(inputDomain, xAccessor) {
 		var left = first(inputDomain);
 		var right = last(inputDomain);
-		var plotData = currentPlotData, intervalToShow = currentInterval, domain;
+		var plotData = currentPlotData,
+			intervalToShow = currentInterval,
+			domain;
 
 		if (useWholeData) {
-			return { plotData: data, scale: scale.copy().domain(inputDomain) };
+			return {
+				plotData: data,
+				scale: scale.copy().domain(inputDomain)
+			};
 		}
 
 		if (isNotDefined(interval) && isArray(allowedIntervals)) {
-			let dataForCurrentInterval = data[currentInterval || allowedIntervals[0]];
 
-			/*var leftIndex = getClosestItemIndexe*/
 		} else if (isDefined(interval) && allowedIntervals.indexOf(interval) > -1) {
 
 		} else if (isNotDefined(interval) && isNotDefined(allowedIntervals)) {
+			// interval is not defined and allowedInterval is not defined also.
 			let filteredData = getFilteredResponse(data, left, right, xAccessor);
 			domain = getDomain(inputDomain, width, filteredData,
-					realXAccessor === xAccessor, currentDomain,
-					canShowTheseMany, realXAccessor);
+				realXAccessor === xAccessor, currentDomain,
+				canShowTheseMany, realXAccessor);
+
+			// console.log(filteredData, inputDomain);
+			// console.log("HERE", left, right, last(data), last(filteredData));
 			if (domain !== currentDomain) {
 				plotData = filteredData;
-				intervalToShow = interval;
+				intervalToShow = null;
 			}
-			if (isNotDefined(plotData) && showMax(width) < data[interval].length) {
-				plotData = data[interval].slice(data[interval].length - showMax(width));
+			if (isNotDefined(plotData) && showMax(width) < data.length) {
+				plotData = data.slice(data.length - showMax(width));
 				domain = [realXAccessor(first(plotData)), realXAccessor(last(plotData))];
 			}
 		}
-		var updatedScale = (scale.isPolyLinear && scale.isPolyLinear() && scale.data)
-			? scale.copy().data(plotData)
-			: scale.copy();
+
+		if (isNotDefined(plotData)) {
+			// console.log(currentInterval, currentDomain, currentPlotData)
+			throw new Error("Initial render and cannot display any data");
+		}
+		var updatedScale = (scale.isPolyLinear && scale.isPolyLinear() && scale.data) ? scale.copy().data(plotData) : scale.copy();
 
 		updatedScale.domain(domain);
-		return { plotData, interval: intervalToShow, scale: updatedScale };
+		return {
+			plotData, interval: intervalToShow, scale: updatedScale
+		};
 	}
 	domain.data = function(x) {
 		if (!arguments.length) return data;
@@ -120,21 +132,19 @@ function showMax(width) {
 }
 
 export default function() {
-	var allowedIntervals, xAccessor, discontinous = false, useWholeData,
-		indexAccessor, indexMutator, map, scale, calculator = [], intervalCalculator = eodIntervalCalculator,
+	var allowedIntervals, xAccessor, discontinous = false,
+		useWholeData,
+		indexAccessor, indexMutator, map, scale, calculator = [],
+		intervalCalculator = eodIntervalCalculator,
 		canShowTheseMany = canShowTheseManyPeriods;
 
-	function evaluate (data) {
-		if (discontinous
-				&& (isNotDefined(scale.isPolyLinear)
-						|| (isDefined(scale.isPolyLinear) && !scale.isPolyLinear()))) {
+	function evaluate(data) {
+		if (discontinous && (isNotDefined(scale.isPolyLinear) || (isDefined(scale.isPolyLinear) && !scale.isPolyLinear()))) {
 			throw new Error("you need a scale that is capable of handling discontinous data. change the scale prop or set discontinous to false");
 		}
 		var realXAccessor = discontinous ? indexAccessor : xAccessor;
 
-		var xScale = (discontinous && isDefined(scale.isPolyLinear) && scale.isPolyLinear())
-			? scale.copy().indexAccessor(realXAccessor).dateAccessor(xAccessor)
-			: scale;
+		var xScale = (discontinous && isDefined(scale.isPolyLinear) && scale.isPolyLinear()) ? scale.copy().indexAccessor(realXAccessor).dateAccessor(xAccessor) : scale;
 
 		var calculate = intervalCalculator()
 			.doIt(isDefined(xScale.isPolyLinear))

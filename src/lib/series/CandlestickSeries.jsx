@@ -1,9 +1,9 @@
 "use strict";
 
-import React from 'react';
+import React from "react";
 import wrap from "./wrap";
 
-import { isDefined } from '../utils/utils';
+import { isDefined } from "../utils";
 
 class CandlestickSeries extends React.Component {
 	render() {
@@ -12,7 +12,7 @@ class CandlestickSeries extends React.Component {
 			<g className={wickClassName} key="wicks">
 				{CandlestickSeries.getWicksSVG(this.props)}
 			</g>
-		</g>
+		</g>;
 	}
 }
 

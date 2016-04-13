@@ -10,7 +10,7 @@
     "build": "npm run clean && npm run build:dev",
     "build:dev": "echo 'DEV -- BUILD' && webpack --config webpack.config.js --debug --progress --colors",
     "build:docs": "npm run build && echo 'DOCS - BUILD' && webpack-dev-server --config webpack.config.docs.js --debug --progress --colors",
-    "lint": "eslint --ext .js,.jsx src --fix",
+    "lint": "eslint --ext .js,.jsx src",
     "test": "mocha --compilers js:babel-core/register --recursive",
     "dev": "./node_modules/.bin/babel-node scripts/server"
   },
@@ -35,6 +35,8 @@
     "copy-webpack-plugin": "^1.1.1",
     "css-loader": "^0.23.0",
     "eslint": "^1.10.3",
+    "eslint-plugin-babel": "^3.2.0",
+    "eslint-plugin-react": "^4.3.0",
     "express": "^4.13.4",
     "file-loader": "^0.8.5",
     "html-loader": "^0.4.0",

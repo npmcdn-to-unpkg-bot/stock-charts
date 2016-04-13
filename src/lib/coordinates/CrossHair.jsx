@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import EdgeCoordinate from "./EdgeCoordinate";
 
 class CrossHair extends React.Component {
@@ -53,7 +53,7 @@ CrossHair.helper = (props) => {
 			x1 = -yAxisPad;
 		}
 		if (edge.at === "right") {
-			x2 = width + yAxisPad
+			x2 = width + yAxisPad;
 		}
 
 		return {

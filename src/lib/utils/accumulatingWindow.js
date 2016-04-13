@@ -23,7 +23,7 @@ export default function() {
 				accumulatedWindow.push(value(d));
 			}
 		}
-	}
+	};
 
 	accumulatingWindow.accumulateTill = function(x) {
 		if (!arguments.length) {

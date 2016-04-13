@@ -4,7 +4,7 @@ import React, { PropTypes, Component } from "react";
 import d3 from "d3";
 
 import wrap from "./wrap";
-import { hexToRGBA, isDefined, first } from "../utils";
+import { hexToRGBA } from "../utils";
 
 class Area extends Component {
 	render() {
@@ -19,16 +19,16 @@ class Area extends Component {
 };
 
 Area.propTypes = {
-	className: React.PropTypes.string,
-	xScale: React.PropTypes.func.isRequired,
-	yScale: React.PropTypes.func.isRequired,
-	xAccessor: React.PropTypes.func.isRequired,
-	yAccessor: React.PropTypes.func.isRequired,
-	plotData: React.PropTypes.array.isRequired,
-	stroke: React.PropTypes.string,
-	fill: React.PropTypes.string,
-	opacity: React.PropTypes.number,
-	base: React.PropTypes.func,
+	className: PropTypes.string,
+	xScale: PropTypes.func.isRequired,
+	yScale: PropTypes.func.isRequired,
+	xAccessor: PropTypes.func.isRequired,
+	yAccessor: PropTypes.func.isRequired,
+	plotData: PropTypes.array.isRequired,
+	stroke: PropTypes.string,
+	fill: PropTypes.string,
+	opacity: PropTypes.number,
+	base: PropTypes.func,
 };
 
 Area.defaultProps = {

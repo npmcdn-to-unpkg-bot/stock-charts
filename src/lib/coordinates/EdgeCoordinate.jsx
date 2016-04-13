@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 class EdgeCoordinate extends React.Component {
 	render() {
@@ -75,7 +75,7 @@ EdgeCoordinate.helper = (props) => {
 	var { x1, y1, x2, y2 } = props;
 
 	if (!show) return null;
-	rectWidth = rectWidth ? reactWidth : (type === "horizontal") ? 60 : 100;
+	rectWidth = rectWidth ? rectWidth : (type === "horizontal") ? 60 : 100;
 	var rectHeight = 20;
 
 	var edgeXRect, edgeYRect, edgeXText, edgeYText;

@@ -6,8 +6,7 @@ var Row = require('lib/row');
 var Section = require('lib/section');
 
 import AreaChart from 'lib/charts/AreaChart';
-import AreaChartWithYPercent from 'lib/charts/AreaChartWithYPercent';
-import AreaChartWithZoomPan from 'lib/charts/AreaChartWithZoomPan';
+
 
 var OverviewPage = React.createClass({
 	statics: {

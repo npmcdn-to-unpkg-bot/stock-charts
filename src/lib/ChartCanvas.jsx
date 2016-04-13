@@ -175,7 +175,7 @@ class ChartCanvas extends Component {
 		var props = { padding, interval, type, margin, postCalculator };
 		var stateProps = { fullData, plotData, showingInterval, xExtentsCalculator, xScale, xAccessor, dataAltered };
 		return (
-			<div style={{position: "relative", height: height, width: width}} className={className} >
+			<div style={{ position: "relative", height: height, width: width }} className={className} >
 				<CanvasContainer ref="canvases" width={width} height={height} type={type} zIndex={zIndex}/>
 				<svg className={className} width={width} height={height} style={{ position: "absolute", zIndex: (zIndex + 5) }}>
 					{cursor}

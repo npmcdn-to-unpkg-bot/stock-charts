@@ -6,8 +6,10 @@ import { first, last, hexToRGBA } from "../utils";
 
 class AxisLine extends Component {
 	render() {
-		var { orient, scale, outerTickSize, fill, stroke, strokeWidth, className, shapeRendering, opacity, range } = this.props;
+		var { orient, outerTickSize, fill, stroke, strokeWidth, className, shapeRendering, opacity, range } = this.props;
 		var sign = orient === "top" || orient === "left" ? -1 : 1;
+
+		// var range = d3_scaleRange(scale);
 
 		var d;
 

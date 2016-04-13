@@ -2,11 +2,13 @@
 
 import d3 from "d3";
 
-function financeTimeScale(drawableData, indexAccessor, backingLinearScale, dateAccessor = d => d.date) {
+import { isDefined, isNotDefined } from "../utils";
+
+export default function financeEODScale(indexAccessor = d => d.idx, dateAccessor = d => d.date, data = [0, 1], backingLinearScale = d3.scale.linear()) {
 
 	var timeScaleSteps = [
-		{ step: 864e5, f: function(d) { return dateAccessor(d) !== undefined && true; } },  // 1-day
-		{ step: 1728e5, f: function(d, i) { return dateAccessor(d) !== undefined && (i % 2 === 0); } }, // 2-day
+		{ step: 864e5, f: function(d) { return isDefined(dateAccessor(d)) && true; } },  // 1-day
+		{ step: 1728e5, f: function(d, i) { return isDefined(dateAccessor(d)) && (i % 2 === 0); } }, // 2-day
 		{ step: 8380e5, f: function(d, i, arr) {
 			if (d.startOfMonth) return true;
 			var list = [];
@@ -25,7 +27,7 @@ function financeTimeScale(drawableData, indexAccessor, backingLinearScale, dateA
 		{ step: 3525e6, f: function(d) {return d.startOfMonth; } },  // 1-month
 		{ step: 7776e6, f: function(d) {return d.startOfQuarter; } },  // 3-month
 		{ step: 31536e6, f: function(d) {return d.startOfYear; } },  // 1-year
-		{ step: 91536e15, f: function(d) {return dateAccessor(d) !== undefined && (d.startOfYear && dateAccessor(d).getFullYear() % 2 === 0); } }  // 2-year
+		{ step: 91536e15, f: function(d) {return isDefined(dateAccessor(d)) && (d.startOfYear && dateAccessor(d).getFullYear() % 2 === 0); } }  // 2-year
 	];
 	var timeScaleStepsBisector = d3.bisector(function(d) { return d.step; }).left;
 	var bisectByIndex = d3.bisector(function(d) { return indexAccessor(d); }).left;
@@ -40,7 +42,7 @@ function financeTimeScale(drawableData, indexAccessor, backingLinearScale, dateA
 		var i = 0, format = tickFormat[i];
 		while (!format[1](d)) format = tickFormat[++i];
 		var tickDisplay = format[0](dateAccessor(d));
-		// console.log(tickDisplay);
+		// console.log(t;ickDisplay);
 		return tickDisplay;
 	}
 
@@ -55,13 +57,23 @@ function financeTimeScale(drawableData, indexAccessor, backingLinearScale, dateA
 	};
 	scale.data = function(x) {
 		if (!arguments.length) {
-			return drawableData;
+			return data;
 		} else {
-			drawableData = x;
-			// this.domain([drawableData.first().index, drawableData.last().index]);
-			this.domain([indexAccessor(drawableData[0]), indexAccessor(drawableData[drawableData.length - 1])]);
+			data = x;
+			// this.domain([data.first().index, data.last().index]);
+			this.domain([indexAccessor(data[0]), indexAccessor(data[data.length - 1])]);
 			return scale;
 		}
+	};
+	scale.indexAccessor = function(x) {
+		if (!arguments.length) return indexAccessor;
+		indexAccessor = x;
+		return scale;
+	};
+	scale.dateAccessor = function(x) {
+		if (!arguments.length) return dateAccessor;
+		dateAccessor = x;
+		return scale;
 	};
 	scale.domain = function(x) {
 		if (!arguments.length) return backingLinearScale.domain();
@@ -92,28 +104,31 @@ function financeTimeScale(drawableData, indexAccessor, backingLinearScale, dateA
 	};
 	scale.ticks = function(m) {
 		var start, end, count = 0;
-		drawableData.forEach(function(d) {
-			if (dateAccessor(d) !== undefined) {
-				if (start === undefined) start = d;
+		data.forEach(function(d) {
+			if (isDefined(dateAccessor(d))) {
+				if (isNotDefined(start)) start = d;
 				end = d;
 				count++;
 			}
 		});
-		m = (count / drawableData.length) * m;
+		// var start = head(data);
+		// var end = last(data);
+		// console.log(data);
+		m = (count / data.length) * m;
 		var span = (dateAccessor(end).getTime() - dateAccessor(start).getTime());
 		var target = span / m;
 		/*
-		console.log(dateAccessor(drawableData[drawableData.length - 1])
-			, drawableData[0]
+		console.log(dateAccessor(data[data.length - 1])
+			, data[0]
 			, span
 			, m
 			, target
 			, timeScaleStepsBisector(d3_time_scaleSteps, target)
 			);
 		*/
-		var ticks = drawableData
+		var ticks = data
 						.filter(timeScaleSteps[timeScaleStepsBisector(timeScaleSteps, target)].f)
-						.map(function(d) { return indexAccessor(d); })
+						.map(indexAccessor)
 						;
 		// return the index of all the ticks to be displayed,
 		// console.log(target, span, m, ticks);
@@ -122,8 +137,8 @@ function financeTimeScale(drawableData, indexAccessor, backingLinearScale, dateA
 	scale.tickFormat = function(/* ticks */) {
 		return function(d) {
 			// for each index received from ticks() function derive the formatted output
-			var tickIndex = bisectByIndex(drawableData, d);
-			return formater(drawableData[tickIndex]);
+			var tickIndex = bisectByIndex(data, d);
+			return formater(data[tickIndex]);
 		};
 	};
 	scale.nice = function(m) {
@@ -131,13 +146,7 @@ function financeTimeScale(drawableData, indexAccessor, backingLinearScale, dateA
 		return scale;
 	};
 	scale.copy = function() {
-		return financeTimeScale(drawableData, indexAccessor, backingLinearScale.copy());
+		return financeEODScale(indexAccessor, dateAccessor, data, backingLinearScale.copy());
 	};
 	return scale;
-}
-
-var defaultFinanceDateTimeScale = function(indexAccessor) {
-	return financeTimeScale([0, 1], indexAccessor, d3.scale.linear());
 };
-
-export default defaultFinanceDateTimeScale;
