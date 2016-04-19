@@ -124,3 +124,10 @@ export function getClosestItem(array, value, accessor, log) {
 	}
 	return closest;
 };
+
+export function clearCanvas(canvasList) {
+	canvasList.forEach(each => {
+		each.setTransform(1, 0, 0, 1, 0, 0);
+		each.clearRect(-1, -1, each.canvas.width + 2, each.canvas.height + 2);
+	});
+};

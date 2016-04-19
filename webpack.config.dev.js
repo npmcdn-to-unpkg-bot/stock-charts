@@ -35,7 +35,8 @@ module.exports = {
 			chunks: ['stockcharts-documentation']
 		}),
 		new CopyWebpackPlugin([
-			{ from: path.join(__dirname, 'docs/data') , to: 'data'}
+			{ from: path.join(__dirname, 'docs/data') , to: 'data'},
+			{ from: path.join(__dirname, 'docs/favicon.ico') }
 		]),
 		new webpack.optimize.OccurenceOrderPlugin(),
     	new webpack.HotModuleReplacementPlugin(),

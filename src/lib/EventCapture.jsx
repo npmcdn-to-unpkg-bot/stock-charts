@@ -15,10 +15,10 @@ class EventCapture extends Component {
 	constructor(props) {
 		super(props);
 		this.handleEnter = this.handleEnter.bind(this);
-		this.handleMouseMove = this.handleMouseMove.bind(this);
 		this.handleLeave = this.handleLeave.bind(this);
+		this.handleMouseMove = this.handleMouseMove.bind(this);
 		this.handleMouseDown = this.handleMouseDown.bind(this);
-
+		this.handleWheel = this.handleWheel.bind(this);
 		this.handlePanEnd = this.handlePanEnd.bind(this);
 		this.handlePan = this.handlePan.bind(this);
 
@@ -26,7 +26,7 @@ class EventCapture extends Component {
 	}
 
 	componentWillMount() {
-
+		if (this.context.onFocus) this.context.onFocus(this.props.defaultFocus);
 	}
 
 	handleMouseDown(e) {
@@ -75,6 +75,21 @@ class EventCapture extends Component {
 		}
 	}
 
+	handleWheel(e) {
+		if (this.props.zoom
+				&& this.context.onZoom
+				&& this.context.focus) {
+			e.stopPropagation();
+			e.preventDefault();
+			var zoomDir = e.deltaY > 0 ? this.props.zoomMultiplier : -this.props.zoomMultiplier;
+			var newPos = mousePosition(e);
+			this.context.onZoom(zoomDir, newPos);
+			if (this.props.onZoom) {
+				this.props.onZoom(e);
+			}
+		}
+	}
+
 	handlePan() {
 		var { pan: panEnabled, onPan: panListener } = this.props;
 		var { deltaXY: dxdy, xScale, onPan } = this.context;
@@ -88,8 +103,6 @@ class EventCapture extends Component {
 				panListener(e);
 			}
 		}
-
-
 	}
 
 	handlePanEnd() {
@@ -122,6 +135,7 @@ class EventCapture extends Component {
 				onMouseLeave={this.handleLeave}
 				onMouseMove={this.handleMouseMove}
 				onMouseDown={this.handleMouseDown}
+				onWheel={this.handleWheel}
 		  />
 		);
 	  }

@@ -26,6 +26,9 @@ var CHART_TYPES = {
 	pages: [
 		require("lib/page/AreaChartPage"),
 		require("lib/page/LineAndScatterChartPage").default,
+		require("lib/page/BarChartPage").default,
+		require("lib/page/CandleStickChartPage").default,
+		require("lib/page/VolumeBarPage").default,
 	]
 };
 
@@ -119,7 +122,10 @@ function renderPage(data, dataFull, compareData, bubbleData, barData, groupedBar
 								</div>
 							)}
 							</Sidebar>
-							<Page someData={data} lotsOfData={dataFull} compareData={compareData} />
+							<Page someData={data}
+									lotsOfData={dataFull}
+									compareData={compareData}
+									barData={barData} />
 						</MainContainer>
 					</div>
 				);
