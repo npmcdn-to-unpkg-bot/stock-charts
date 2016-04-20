@@ -93,7 +93,6 @@ export function getChartConfigWithUpdatedYScales(chartConfig, plotData) {
 			var yValues = yExtents.map(eachExtent =>
 				plotData.map(values(eachExtent)));
 			yValues = flattenDeep(yValues);
-			``
 			var yDomains = (yScale.invert) ? d3.extent(yValues) : d3.set(yValues).values();
 
 			return yDomains;
