@@ -4,10 +4,12 @@ import d3 from "d3";
 import identity from "./identity";
 import slidingWindow from "./slidingWindow";
 import accumulatingWindow from "./accumulatingWindow";
+import mappedSlidingWindow from "./mappedSlidingWindow";
 import shallowEqual from "./shallowEqual";
 import zipper from "./zipper";
 
 export {
+	mappedSlidingWindow,
 	identity,
 	slidingWindow,
 	accumulatingWindow,
