@@ -13,6 +13,7 @@ import series from "./lib/series";
 import coordinates from "./lib/coordinates";
 import * as scale from "./lib/scale";
 import * as tooltip from "./lib/tooltip";
+import * as indicator from "./lib/indicator";
 
 const version = "0.0.1";
 
@@ -28,4 +29,5 @@ export default {
 	Utils,
 	scale,
 	tooltip,
+	indicator,
 };

@@ -7,6 +7,7 @@ import accumulatingWindow from "./accumulatingWindow";
 import mappedSlidingWindow from "./mappedSlidingWindow";
 import shallowEqual from "./shallowEqual";
 import zipper from "./zipper";
+import merge from "./merge";
 
 export {
 	mappedSlidingWindow,
@@ -15,6 +16,7 @@ export {
 	accumulatingWindow,
 	shallowEqual,
 	zipper,
+	merge,
 };
 
 export const overlayColors = d3.scale.category10();

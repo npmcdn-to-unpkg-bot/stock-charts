@@ -29,6 +29,7 @@ var CHART_TYPES = {
 		require("lib/page/BarChartPage").default,
 		require("lib/page/CandleStickChartPage").default,
 		require("lib/page/VolumeBarPage").default,
+		require("lib/page/HeikinAshiPage").default,
 	]
 };
 
